@@ -1,0 +1,18 @@
+### Confirm result (agreeing)
+POST http://localhost:3000/api/challenge/confirm-result
+Content-Type: application/json
+
+{
+  "challengeId": "REPLACE_WITH_CHALLENGE_ID",
+  "isConfirmed": true
+}
+
+### Dispute result
+POST http://localhost:3000/api/challenge/confirm-result
+Content-Type: application/json
+
+{
+  "challengeId": "REPLACE_WITH_CHALLENGE_ID",
+  "isConfirmed": false,
+  "disputeReason": "The submitted result is incorrect. I have evidence showing a different outcome."
+} 

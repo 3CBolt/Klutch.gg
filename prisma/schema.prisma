@@ -1,0 +1,135 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  displayName   String?
+  bio           String?   @db.Text
+  email         String?   @unique
+  emailVerified DateTime?
+  image         String?
+  password      String?
+  gamingStats   Json?     // Keep temporarily for migration
+  accounts      Account[]
+  sessions      Session[]
+
+  // Gaming stats as plain fields
+  kills         Int       @default(0)
+  deaths        Int       @default(0)
+  wins          Int       @default(0)
+  gamesPlayed   Int       @default(0)
+  kdRatio       Float     @default(0)
+  winRate       Float     @default(0)
+
+  // Challenge relations
+  createdChallenges   Challenge[] @relation("CreatedChallenges")
+  acceptedChallenges  Challenge[] @relation("AcceptedChallenges")
+  wonChallenges       Challenge[] @relation("WonChallenges")
+
+  // Club relations
+  ownedClubs    Club[]     @relation("ClubOwner")
+  memberOfClubs Club[]     @relation("ClubMembers")
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+enum ChallengeType {
+  KillRace
+  OverUnder
+  Survival
+}
+
+enum ChallengeStatus {
+  OPEN
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+  CANCELED
+  DISPUTED
+  PAID
+}
+
+model Club {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  description String?  @db.Text
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  ownerId     String
+
+  // Relations
+  owner       User     @relation("ClubOwner", fields: [ownerId], references: [id])
+  members     User[]   @relation("ClubMembers")
+
+  // Optional: Challenge relation for club-specific challenges
+  challenges  Challenge[]
+}
+
+model Challenge {
+  id          String          @id @default(cuid())
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+  creatorId   String
+  opponentId  String?
+  stake       Float
+  type        ChallengeType
+  status      ChallengeStatus @default(OPEN)
+  winnerId    String?
+  lockedFunds Float           @default(0)
+  clubId      String?         // Optional club association
+
+  // Result submission fields
+  creatorSubmittedWinnerId   String?
+  opponentSubmittedWinnerId  String?
+  resultNotes               String?
+  screenshotUrl            String?
+  disputeReason            String?
+
+  creator     User            @relation("CreatedChallenges", fields: [creatorId], references: [id])
+  opponent    User?           @relation("AcceptedChallenges", fields: [opponentId], references: [id])
+  winner      User?           @relation("WonChallenges", fields: [winnerId], references: [id])
+  club        Club?           @relation(fields: [clubId], references: [id])
+} 

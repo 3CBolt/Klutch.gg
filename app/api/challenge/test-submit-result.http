@@ -1,0 +1,33 @@
+### Create test data
+GET http://localhost:3001/api/challenge/test
+
+### Submit result as creator (winning)
+POST http://localhost:3001/api/challenge/submit-result
+Content-Type: application/json
+
+{
+  "challengeId": "REPLACE_WITH_CHALLENGE_ID",
+  "winnerId": "REPLACE_WITH_CREATOR_ID",
+  "notes": "I won the match 10-5"
+}
+
+### Submit result as opponent (agreeing)
+POST http://localhost:3001/api/challenge/submit-result
+Content-Type: application/json
+
+{
+  "challengeId": "REPLACE_WITH_CHALLENGE_ID",
+  "winnerId": "REPLACE_WITH_CREATOR_ID",
+  "notes": "Good game, they won fair and square"
+}
+
+### Submit result as opponent (disputing)
+POST http://localhost:3001/api/challenge/submit-result
+Content-Type: application/json
+
+{
+  "challengeId": "REPLACE_WITH_CHALLENGE_ID",
+  "winnerId": "REPLACE_WITH_OPPONENT_ID",
+  "notes": "I actually won this match",
+  "disputeReason": "The score was 10-5 in my favor"
+} 
