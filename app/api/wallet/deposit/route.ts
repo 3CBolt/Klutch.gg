@@ -1,25 +1,24 @@
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/app/api/auth/[...nextauth]/auth';
-import { stripe } from '@/app/lib/stripe';
+import { stripe } from '@/lib/stripe';
+import { prisma } from '@/lib/prisma';
 
 export async function POST(request: Request) {
   try {
     const session = await getServerSession(authOptions);
-
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     const { amount } = await request.json();
-
     if (!amount || amount < 1) {
-      return NextResponse.json(
-        { error: 'Amount must be at least 1 USD' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Invalid amount' }, { status: 400 });
     }
 
+    // Get the origin from the request headers
+    const origin = request.headers.get('origin') || 'http://localhost:3000';
+    
     const checkoutSession = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
       line_items: [
@@ -28,24 +27,27 @@ export async function POST(request: Request) {
             currency: 'usd',
             product_data: {
               name: 'Wallet Deposit',
-              description: 'Add funds to your Klutch.gg wallet',
             },
-            unit_amount: Math.round(amount * 100), // Convert to cents
+            unit_amount: amount * 100, // Convert to cents
           },
           quantity: 1,
         },
       ],
       mode: 'payment',
-      success_url: `${process.env.NEXTAUTH_URL}/wallet?status=success&session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${process.env.NEXTAUTH_URL}/wallet?status=canceled`,
+      success_url: `${origin}/wallet?status=success&session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${origin}/wallet?status=canceled`,
       client_reference_id: session.user.id,
+      metadata: {
+        userId: session.user.id,
+        type: 'wallet_deposit'
+      }
     });
 
-    return NextResponse.json({ sessionId: checkoutSession.id });
+    return NextResponse.json({ url: checkoutSession.url });
   } catch (error) {
-    console.error('Error creating checkout session:', error);
+    console.error('Deposit error:', error);
     return NextResponse.json(
-      { error: 'Failed to create deposit session' },
+      { error: 'Failed to create checkout session' },
       { status: 500 }
     );
   }

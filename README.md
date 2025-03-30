@@ -143,6 +143,14 @@ npm run dev
 - Added games played tracking
 - Enhanced error notifications
 
+### Sprint 6.3 - Dispute System & Wallet Integration
+- Implemented admin dispute resolution dashboard
+- Added transaction logging system for wallet events
+- Enhanced challenge creation with automatic stake deduction
+- Added winner payout system with transaction tracking
+- Improved error handling and validation for wallet operations
+- Added transaction history tracking for all wallet events
+
 ## Key Business Rules
 
 - Klutch.gg is for skill-based wagering, not gambling

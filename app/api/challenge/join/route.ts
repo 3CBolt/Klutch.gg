@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '../../auth/[...nextauth]/auth';
 import { prisma } from '@/lib/prisma';
+import { ChallengeStatus } from '@prisma/client';
 
 export async function POST(request: Request) {
   try {
@@ -46,7 +47,7 @@ export async function POST(request: Request) {
     }
 
     // Validate challenge is open
-    if (challenge.status !== 'Open') {
+    if (challenge.status !== ChallengeStatus.OPEN) {
       return NextResponse.json(
         { error: 'Challenge is not open for joining' },
         { status: 400 }
@@ -66,7 +67,7 @@ export async function POST(request: Request) {
       where: { id: challengeId },
       data: {
         opponentId: session.user.id,
-        status: 'InProgress'
+        status: ChallengeStatus.IN_PROGRESS
       },
       include: {
         creator: {

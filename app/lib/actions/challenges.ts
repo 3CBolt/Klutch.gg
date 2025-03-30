@@ -57,23 +57,34 @@ export async function getOpenChallenges(): Promise<ChallengeWithRelations[]> {
 export async function getAllChallenges(): Promise<ChallengeWithRelations[]> {
   try {
     const challenges = await prisma.challenge.findMany({
+      where: {
+        status: {
+          in: [ChallengeStatus.OPEN, ChallengeStatus.IN_PROGRESS]
+        }
+      },
       include: {
         creator: {
           select: {
+            id: true,
             name: true,
-            email: true
+            email: true,
+            displayName: true
           }
         },
         opponent: {
           select: {
+            id: true,
             name: true,
-            email: true
+            email: true,
+            displayName: true
           }
         },
         winner: {
           select: {
+            id: true,
             name: true,
-            email: true
+            email: true,
+            displayName: true
           }
         }
       },
@@ -126,6 +137,54 @@ export async function getUserChallenges(userId: string): Promise<ChallengeWithRe
     return challenges || [];
   } catch (error) {
     console.error('Error fetching user challenges:', error);
+    return [];
+  }
+}
+
+export async function getChallengeHistory(statusFilter?: ChallengeStatus): Promise<ChallengeWithRelations[]> {
+  try {
+    const where = {
+      status: statusFilter || {
+        in: [ChallengeStatus.COMPLETED, ChallengeStatus.DISPUTED]
+      }
+    };
+
+    const challenges = await prisma.challenge.findMany({
+      where,
+      include: {
+        creator: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            displayName: true
+          }
+        },
+        opponent: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            displayName: true
+          }
+        },
+        winner: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            displayName: true
+          }
+        }
+      },
+      orderBy: {
+        updatedAt: 'desc'
+      }
+    });
+
+    return challenges;
+  } catch (error) {
+    console.error('Error fetching challenge history:', error);
     return [];
   }
 } 

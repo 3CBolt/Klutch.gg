@@ -64,18 +64,17 @@ export async function POST(request: Request) {
       }
     }
 
-    // Create or get the creator user
-    const creator = await prisma.user.upsert({
+    // Get the creator user
+    const creator = await prisma.user.findUnique({
       where: { email: session.user.email },
-      update: {
-        name: session.user.name || null,
-      },
-      create: {
-        email: session.user.email,
-        name: session.user.name || null,
-        balance: 100, // Initial balance for new users
-      },
     });
+
+    if (!creator) {
+      return NextResponse.json(
+        { error: 'Creator account not found' },
+        { status: 404 }
+      );
+    }
 
     // Check if creator has sufficient balance
     if (creator.balance < stake) {
@@ -85,7 +84,7 @@ export async function POST(request: Request) {
       );
     }
 
-    // If opponent is specified, ensure they exist
+    // If opponent is specified, ensure they exist and have sufficient balance
     let opponent = null;
     if (opponentUsername) {
       opponent = await prisma.user.findUnique({
@@ -98,10 +97,46 @@ export async function POST(request: Request) {
           { status: 400 }
         );
       }
+
+      // Check opponent's balance
+      if (opponent.balance < stake) {
+        return NextResponse.json(
+          { error: 'Opponent has insufficient balance for this challenge' },
+          { status: 400 }
+        );
+      }
     }
 
     // Create challenge and handle balance in a transaction
     const challenge = await prisma.$transaction(async (tx) => {
+      // Create the challenge first to get the ID
+      const challenge = await tx.challenge.create({
+        data: {
+          creatorId: creator.id,
+          opponentId: opponent?.id || null,
+          stake,
+          type,
+          status: opponent ? ChallengeStatus.IN_PROGRESS : ChallengeStatus.OPEN,
+          lockedFunds: opponent ? stake * 2 : stake, // Lock stakes from both players if opponent exists
+        },
+        include: {
+          creator: {
+            select: {
+              name: true,
+              email: true,
+              displayName: true,
+            }
+          },
+          opponent: {
+            select: {
+              name: true,
+              email: true,
+              displayName: true,
+            }
+          }
+        }
+      });
+
       // Deduct stake from creator's balance
       await tx.user.update({
         where: { id: creator.id },
@@ -112,31 +147,47 @@ export async function POST(request: Request) {
         },
       });
 
-      // Create the challenge
-      const challenge = await tx.challenge.create({
+      // Log creator's stake deduction transaction
+      await tx.transaction.create({
         data: {
-          creatorId: creator.id,
-          opponentId: opponent?.id || null,
-          stake,
-          type,
-          status: ChallengeStatus.OPEN,
-          lockedFunds: stake, // Lock the stake amount
-        },
-        include: {
-          creator: {
-            select: {
-              name: true,
-              email: true
-            }
-          },
-          opponent: {
-            select: {
-              name: true,
-              email: true
-            }
+          userId: creator.id,
+          amount: -stake,
+          type: 'CHALLENGE_ENTRY',
+          description: `Stake for ${type} challenge`,
+          referenceId: challenge.id,
+          metadata: {
+            challengeType: type,
+            role: 'creator'
           }
         }
       });
+
+      // If there's a direct opponent, deduct their stake too
+      if (opponent) {
+        await tx.user.update({
+          where: { id: opponent.id },
+          data: {
+            balance: {
+              decrement: stake,
+            },
+          },
+        });
+
+        // Log opponent's stake deduction transaction
+        await tx.transaction.create({
+          data: {
+            userId: opponent.id,
+            amount: -stake,
+            type: 'CHALLENGE_ENTRY',
+            description: `Stake for ${type} challenge`,
+            referenceId: challenge.id,
+            metadata: {
+              challengeType: type,
+              role: 'opponent'
+            }
+          }
+        });
+      }
 
       return challenge;
     });
@@ -144,9 +195,9 @@ export async function POST(request: Request) {
     return NextResponse.json({ 
       success: true,
       challenge,
-      redirect: '/challenges' // Add redirect path to response
+      redirect: '/challenges'
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error creating challenge:', error);
     
     // Handle specific Prisma errors

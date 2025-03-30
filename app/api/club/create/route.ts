@@ -14,7 +14,7 @@ export async function POST(request: Request) {
   try {
     const session = await getServerSession(authOptions);
     
-    if (!session?.user?.email) {
+    if (!session?.user?.id) {
       return NextResponse.json(
         { error: 'You must be logged in to create a club' },
         { status: 401 }
@@ -26,7 +26,7 @@ export async function POST(request: Request) {
 
     if (!result.success) {
       return NextResponse.json(
-        { error: 'Invalid request body' },
+        { error: 'Invalid request body', details: result.error.errors },
         { status: 400 }
       );
     }
@@ -50,36 +50,29 @@ export async function POST(request: Request) {
       );
     }
 
-    // Get or create user
-    const user = await prisma.user.upsert({
-      where: { email: session.user.email },
-      update: {},
-      create: {
-        email: session.user.email,
-        balance: 100, // Default balance for new users
-      },
-    });
-
     // Create club
     const club = await prisma.club.create({
       data: {
         name,
         description,
-        ownerId: user.id,
+        ownerId: session.user.id,
         members: {
-          connect: { id: user.id },
+          connect: { id: session.user.id },
         },
       },
       include: {
         owner: {
           select: {
+            id: true,
             email: true,
+            name: true,
           },
         },
         members: {
           select: {
             id: true,
             email: true,
+            name: true,
           },
         },
       },

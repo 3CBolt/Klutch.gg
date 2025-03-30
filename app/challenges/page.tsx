@@ -12,10 +12,7 @@ function formatStatus(status: ChallengeStatus): string {
     [ChallengeStatus.OPEN]: 'Open',
     [ChallengeStatus.IN_PROGRESS]: 'In Progress',
     [ChallengeStatus.COMPLETED]: 'Completed',
-    [ChallengeStatus.DISPUTED]: 'Disputed',
-    [ChallengeStatus.PAID]: 'Paid',
-    [ChallengeStatus.CANCELED]: 'Canceled',
-    [ChallengeStatus.PENDING]: 'Pending'
+    [ChallengeStatus.DISPUTED]: 'Disputed'
   };
   return statusMap[status] || status;
 }
@@ -48,14 +45,20 @@ function EmptyState() {
           d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
         />
       </svg>
-      <h3 className="mt-2 text-sm font-semibold text-gray-900">No challenges found</h3>
-      <p className="mt-1 text-sm text-gray-500">Get started by creating a new challenge.</p>
-      <div className="mt-6">
+      <h3 className="mt-2 text-sm font-semibold text-gray-900">No active challenges</h3>
+      <p className="mt-1 text-sm text-gray-500">Create a new challenge or check Challenge History for completed ones.</p>
+      <div className="mt-6 space-x-4">
         <Link
           href="/challenges/create"
           className="inline-flex items-center rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
         >
-          <span>Create Challenge</span>
+          Create Challenge
+        </Link>
+        <Link
+          href="/challenges/history"
+          className="inline-flex items-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50"
+        >
+          View History
         </Link>
       </div>
     </div>
@@ -149,7 +152,6 @@ function ChallengeList({ challenges }: { challenges: Awaited<ReturnType<typeof g
                 challenge.status === ChallengeStatus.IN_PROGRESS ? 'bg-blue-100 text-blue-800' :
                 challenge.status === ChallengeStatus.COMPLETED ? 'bg-purple-100 text-purple-800' :
                 challenge.status === ChallengeStatus.DISPUTED ? 'bg-red-100 text-red-800' :
-                challenge.status === ChallengeStatus.PAID ? 'bg-green-100 text-green-800' :
                 'bg-gray-100 text-gray-800'
               }`}>
                 {formatStatus(challenge.status)}
@@ -188,9 +190,9 @@ export default async function ChallengePage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="sm:flex sm:items-center">
             <div className="sm:flex-auto">
-              <h1 className="text-2xl font-semibold text-gray-900">Challenges</h1>
+              <h1 className="text-2xl font-semibold text-gray-900">Active Challenges</h1>
               <p className="mt-2 text-sm text-gray-700">
-                Browse challenges or create your own
+                Browse open challenges or create your own. Completed and disputed challenges can be found in Challenge History.
               </p>
             </div>
             <div className="mt-4 sm:mt-0 sm:ml-16 sm:flex-none">
@@ -202,7 +204,6 @@ export default async function ChallengePage() {
               </Link>
             </div>
           </div>
-
           <div className="mt-8 flex flex-col">
             <div className="-my-2 -mx-4 overflow-x-auto sm:-mx-6 lg:-mx-8">
               <div className="inline-block min-w-full py-2 align-middle md:px-6 lg:px-8">

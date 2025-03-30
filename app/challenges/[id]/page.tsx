@@ -1,4 +1,4 @@
-import { redirect } from 'next/navigation';
+import { redirect, notFound } from 'next/navigation';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/app/api/auth/[...nextauth]/auth';
 import { prisma } from '@/app/lib/prisma';
@@ -6,74 +6,77 @@ import { formatCurrency } from '@/app/lib/utils';
 import { ChallengeStatus } from '@prisma/client';
 import ChallengeActions from './ChallengeActions';
 import Link from 'next/link';
+import { MarkWinnerSection } from './MarkWinnerSection';
 
 function formatStatus(status: ChallengeStatus): string {
   const statusMap = {
-    [ChallengeStatus.OPEN]: 'Open',
-    [ChallengeStatus.IN_PROGRESS]: 'In Progress',
-    [ChallengeStatus.COMPLETED]: 'Completed',
-    [ChallengeStatus.DISPUTED]: 'Disputed',
-    [ChallengeStatus.PAID]: 'Paid',
-    [ChallengeStatus.CANCELED]: 'Canceled',
-    [ChallengeStatus.PENDING]: 'Pending'
-  };
-  return statusMap[status] || status;
+    OPEN: 'Open',
+    IN_PROGRESS: 'In Progress',
+    COMPLETED: 'Completed',
+    DISPUTED: 'Disputed'
+  } as const;
+  return statusMap[status as keyof typeof statusMap] || status;
 }
 
-export default async function ChallengePage({ params }: { params: { id: string } }) {
-  const session = await getServerSession(authOptions);
-
-  if (!session?.user?.email) {
-    redirect('/login');
-  }
-
+async function getChallengeDetails(id: string) {
   const challenge = await prisma.challenge.findUnique({
-    where: { id: params.id },
+    where: { id },
     include: {
       creator: {
         select: {
           id: true,
           name: true,
+          displayName: true,
+          image: true,
           email: true,
-          displayName: true
-        }
+        },
       },
       opponent: {
         select: {
           id: true,
           name: true,
+          displayName: true,
+          image: true,
           email: true,
-          displayName: true
-        }
+        },
       },
       winner: {
         select: {
           id: true,
           name: true,
+          displayName: true,
+          image: true,
           email: true,
-          displayName: true
-        }
-      }
-    }
+        },
+      },
+    },
   });
 
   if (!challenge) {
-    return (
-      <div className="min-h-screen bg-gray-50 py-12">
-        <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="bg-white shadow-sm rounded-lg p-6">
-            <h1 className="text-2xl font-semibold text-gray-900">Challenge not found</h1>
-          </div>
-        </div>
-      </div>
-    );
+    notFound();
   }
+
+  return challenge;
+}
+
+export default async function ChallengePage({ params }: { params: { id: string } }) {
+  const session = await getServerSession(authOptions);
+  if (!session?.user?.email) {
+    redirect('/login');
+  }
+
+  const challenge = await getChallengeDetails(params.id);
 
   const isCreator = session.user.email === challenge.creator.email;
   const isOpponent = challenge.opponent?.email === session.user.email;
   const canEdit = isCreator && challenge.status === ChallengeStatus.OPEN;
   const canDelete = isCreator && challenge.status === ChallengeStatus.OPEN;
   const canJoin = !isCreator && !isOpponent && challenge.status === ChallengeStatus.OPEN;
+
+  const isParticipant =
+    session?.user?.email &&
+    (challenge.creatorId === session.user.id ||
+      challenge.opponentId === session.user.id);
 
   return (
     <div className="min-h-screen bg-gray-50 py-12">
@@ -124,7 +127,6 @@ export default async function ChallengePage({ params }: { params: { id: string }
                     challenge.status === ChallengeStatus.IN_PROGRESS ? 'bg-blue-100 text-blue-800' :
                     challenge.status === ChallengeStatus.COMPLETED ? 'bg-purple-100 text-purple-800' :
                     challenge.status === ChallengeStatus.DISPUTED ? 'bg-red-100 text-red-800' :
-                    challenge.status === ChallengeStatus.PAID ? 'bg-green-100 text-green-800' :
                     'bg-gray-100 text-gray-800'
                   }`}>
                     {formatStatus(challenge.status)}
@@ -162,7 +164,30 @@ export default async function ChallengePage({ params }: { params: { id: string }
             />
           </div>
         </div>
+
+        <MarkWinnerSection 
+          challenge={challenge}
+          isParticipant={isParticipant}
+        />
+
+        {challenge.status === ChallengeStatus.COMPLETED && challenge.winner && (
+          <div className="mt-8 p-4 bg-green-50 rounded-md">
+            <h2 className="text-lg font-semibold text-green-800">Winner</h2>
+            <p className="text-green-700">
+              {challenge.winner.displayName || challenge.winner.name}
+            </p>
+          </div>
+        )}
+
+        {challenge.status === ChallengeStatus.DISPUTED && (
+          <div className="mt-8 p-4 bg-red-50 rounded-md">
+            <h2 className="text-lg font-semibold text-red-800">Challenge Disputed</h2>
+            <p className="text-red-700">
+              This challenge is currently under dispute. Both players have submitted different winners.
+            </p>
+          </div>
+        )}
       </div>
     </div>
   );
-} 
+}

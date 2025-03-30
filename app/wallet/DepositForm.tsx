@@ -20,38 +20,61 @@ export default function DepositForm() {
 
   useEffect(() => {
     const status = searchParams?.get('status');
-    if (status === 'success') {
-      setSuccessMessage('Payment successful! Your wallet will be updated shortly.');
-      // Remove the query parameters after a short delay
-      const timer = setTimeout(() => {
-        router.replace('/wallet');
-      }, 5000);
-      return () => clearTimeout(timer);
-    } else if (status === 'canceled') {
-      setError('Payment canceled. Please try again.');
-      // Remove the query parameters after a short delay
-      const timer = setTimeout(() => {
-        router.replace('/wallet');
-        setError(null);
-      }, 3000);
-      return () => clearTimeout(timer);
-    }
+    const sessionId = searchParams?.get('session_id');
+
+    const checkSession = async () => {
+      if (status === 'success' && sessionId) {
+        try {
+          // Verify the session status with your backend
+          const response = await fetch(`/api/wallet/verify-session?session_id=${sessionId}`);
+          const data = await response.json();
+
+          if (response.ok && data.success) {
+            setSuccessMessage('Payment successful! Your wallet has been updated.');
+          } else {
+            setError('Failed to verify payment. Please contact support if funds were deducted.');
+          }
+        } catch (err) {
+          setError('Failed to verify payment status.');
+        }
+
+        // Remove the query parameters after handling
+        const timer = setTimeout(() => {
+          router.replace('/wallet');
+        }, 5000);
+        return () => clearTimeout(timer);
+      } else if (status === 'canceled') {
+        setError('Payment canceled. Please try again.');
+        // Remove the query parameters after a short delay
+        const timer = setTimeout(() => {
+          router.replace('/wallet');
+          setError(null);
+        }, 3000);
+        return () => clearTimeout(timer);
+      }
+    };
+
+    checkSession();
   }, [searchParams, router]);
 
   const handleDeposit = async () => {
-    try {
-      setIsLoading(true);
-      setError(null);
-      setSuccessMessage(null);
+    const depositAmount = parseFloat(amount);
+    if (isNaN(depositAmount) || depositAmount < 1) {
+      setError('Please enter a valid amount (minimum $1)');
+      return;
+    }
 
+    setIsLoading(true);
+    setError('');
+    setSuccessMessage('');
+
+    try {
       const response = await fetch('/api/wallet/deposit', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          amount: parseFloat(amount),
-        }),
+        body: JSON.stringify({ amount: depositAmount }),
       });
 
       const data = await response.json();
@@ -60,19 +83,12 @@ export default function DepositForm() {
         throw new Error(data.error || 'Failed to create deposit session');
       }
 
-      // Redirect to Stripe Checkout
-      const stripe = await stripePromise;
-      if (!stripe) throw new Error('Failed to load Stripe');
-
-      const { error: stripeError } = await stripe.redirectToCheckout({
-        sessionId: data.sessionId,
-      });
-
-      if (stripeError) {
-        throw stripeError;
-      }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to process deposit');
+      // Redirect to the Stripe Checkout URL directly
+      window.location.href = data.url;
+    } catch (error) {
+      console.error('Deposit error:', error);
+      setError(error instanceof Error ? error.message : 'Failed to process deposit');
+      setTimeout(() => setError(''), 5000);
     } finally {
       setIsLoading(false);
     }
@@ -110,6 +126,7 @@ export default function DepositForm() {
             onChange={(e) => setAmount(e.target.value)}
             className="focus:ring-indigo-500 focus:border-indigo-500 block w-full pl-7 pr-12 sm:text-sm border-gray-300 rounded-md"
             placeholder="0.00"
+            disabled={isLoading}
           />
         </div>
       </div>
