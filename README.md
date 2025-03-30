@@ -258,14 +258,17 @@ Sprint 7 - Challenge System v2 (In Progress)
 - Finalized Challenge History
 - Admin Tools (basic)
 
-📌 Upcoming Sprints
-
-Sprint 8 - Wallet System v2
+Sprint 8 - Wallet System v2 (In Progress)
 - Challenge Entry Stake Deduction
 - Prize Distribution to Winner
 - Transaction History in Wallet
+  - Transaction history table with type, amount, date, and linked challenge
+  - Transaction types: Deposit, Entry Fee, Winnings
+  - Sortable and filterable transaction list
 - Withdrawal Request Flow
 - Balance Validation Before Challenge Join
+
+📌 Upcoming Sprints
 
 Sprint 9 - Real-time & UX Improvements
 - WebSocket Setup for Live Updates
