@@ -1,11 +1,16 @@
-import { redirect } from 'next/navigation';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/app/api/auth/[...nextauth]/auth';
-import { Card, CardContent, CardHeader, CardTitle } from '@/app/components/ui/card';
-import { Skeleton } from '@/app/components/ui/skeleton';
-import DepositForm from './DepositForm';
-import TransactionHistory from './TransactionHistory';
-import { prisma } from '@/app/lib/prisma';
+import { redirect } from "next/navigation";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/app/api/auth/[...nextauth]/auth";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/app/components/ui/card";
+import { Skeleton } from "@/app/components/ui/skeleton";
+import DepositForm from "./DepositForm";
+import TransactionHistory from "./TransactionHistory";
+import { prisma } from "@/app/lib/prisma";
 
 function LoadingState() {
   return (
@@ -34,7 +39,7 @@ export default async function WalletPage() {
   const session = await getServerSession(authOptions);
 
   if (!session) {
-    redirect('/login');
+    redirect("/login");
   }
 
   const transactions = await prisma.transaction.findMany({
@@ -42,14 +47,14 @@ export default async function WalletPage() {
       userId: session.user.id,
     },
     orderBy: {
-      createdAt: 'desc',
+      createdAt: "desc",
     },
   });
 
   const balance = session.user?.balance || 0;
-  const formattedBalance = new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: 'USD',
+  const formattedBalance = new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   }).format(balance);
@@ -64,7 +69,9 @@ export default async function WalletPage() {
             </CardHeader>
             <CardContent>
               <div className="bg-gray-50 p-6 rounded-lg">
-                <p className="text-sm font-medium text-gray-500 uppercase tracking-wide">Current Balance</p>
+                <p className="text-sm font-medium text-gray-500 uppercase tracking-wide">
+                  Current Balance
+                </p>
                 <p className="mt-2 text-4xl font-bold text-gray-900 tabular-nums">
                   {formattedBalance}
                 </p>
@@ -93,4 +100,4 @@ export default async function WalletPage() {
       </div>
     </div>
   );
-} 
+}

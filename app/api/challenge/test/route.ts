@@ -1,28 +1,28 @@
-import { NextResponse } from 'next/server';
-import { prisma } from '@/app/lib/prisma';
-import { ChallengeType, ChallengeStatus } from '@prisma/client';
+import { NextResponse } from "next/server";
+import { prisma } from "@/app/lib/prisma";
+import { ChallengeType, ChallengeStatus } from "@prisma/client";
 
 export async function GET() {
   try {
     // Create test users
     const creator = await prisma.user.upsert({
-      where: { email: 'test.creator@example.com' },
+      where: { email: "test.creator@example.com" },
       update: {},
       create: {
-        email: 'test.creator@example.com',
-        name: 'Test Creator',
-        balance: 100
-      }
+        email: "test.creator@example.com",
+        name: "Test Creator",
+        balance: 100,
+      },
     });
 
     const opponent = await prisma.user.upsert({
-      where: { email: 'test.opponent@example.com' },
+      where: { email: "test.opponent@example.com" },
       update: {},
       create: {
-        email: 'test.opponent@example.com',
-        name: 'Test Opponent',
-        balance: 100
-      }
+        email: "test.opponent@example.com",
+        name: "Test Opponent",
+        balance: 100,
+      },
     });
 
     // Create a challenge
@@ -33,23 +33,23 @@ export async function GET() {
         stake: 10,
         type: ChallengeType.KillRace,
         status: ChallengeStatus.IN_PROGRESS,
-        lockedFunds: 20 // Both players' stakes
-      }
+        lockedFunds: 20, // Both players' stakes
+      },
     });
 
     return NextResponse.json({
-      message: 'Test data created successfully',
+      message: "Test data created successfully",
       data: {
         creator,
         opponent,
-        challenge
-      }
+        challenge,
+      },
     });
   } catch (error) {
-    console.error('Error creating test data:', error);
+    console.error("Error creating test data:", error);
     return NextResponse.json(
-      { error: 'Failed to create test data' },
-      { status: 500 }
+      { error: "Failed to create test data" },
+      { status: 500 },
     );
   }
-} 
+}

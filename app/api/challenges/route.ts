@@ -1,50 +1,100 @@
-import { NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '../auth/[...nextauth]/auth';
-import { prisma } from '@/app/lib/prisma';
-import { lockFundsForChallenge, InsufficientBalanceError } from '@/app/lib/actions/transactions';
+import { NextResponse } from "next/server";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/app/api/auth/[...nextauth]/auth";
+import { prisma } from "@/lib/prisma";
+import { handleError, Errors } from "@/lib/errors";
+import { z } from "zod";
+
+const CreateChallengeSchema = z.object({
+  stake: z.number().min(0, "Stake must be non-negative"),
+  type: z.enum(["KillRace", "OverUnder", "Survival"]),
+  clubId: z.string().optional(),
+});
 
 export async function POST(request: Request) {
   try {
     const session = await getServerSession(authOptions);
-
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    if (!session?.user) {
+      throw Errors.Unauthorized;
     }
 
-    const { stake, type } = await request.json();
+    const body = await request.json();
+    const result = CreateChallengeSchema.safeParse(body);
+    
+    if (!result.success) {
+      throw Errors.ValidationError(result.error.errors[0].message);
+    }
 
-    // Create challenge and lock funds in a transaction
-    const challenge = await prisma.$transaction(async (tx) => {
-      // Create the challenge first
-      const challenge = await tx.challenge.create({
-        data: {
-          creatorId: session.user.id,
-          stake,
-          type,
-          status: 'OPEN'
-        }
-      });
+    const { stake, type, clubId } = result.data;
 
-      // Lock the funds
-      await lockFundsForChallenge(session.user.id, challenge.id, stake);
-
-      return challenge;
+    // Check user balance
+    const user = await prisma.user.findUnique({
+      where: { id: session.user.id },
+      select: { balance: true },
     });
 
-    return NextResponse.json(challenge);
-  } catch (error) {
-    if (error instanceof InsufficientBalanceError) {
-      return NextResponse.json(
-        { error: 'Insufficient balance to create challenge' },
-        { status: 400 }
-      );
+    if (!user || user.balance < stake) {
+      throw Errors.BadRequest("Insufficient balance");
     }
-    
-    console.error('Error creating challenge:', error);
-    return NextResponse.json(
-      { error: 'Failed to create challenge' },
-      { status: 500 }
-    );
+
+    // Create challenge
+    const challenge = await prisma.challenge.create({
+      data: {
+        creatorId: session.user.id,
+        stake,
+        type,
+        clubId,
+        lockedFunds: stake,
+      },
+    });
+
+    // Update user balance
+    await prisma.user.update({
+      where: { id: session.user.id },
+      data: { balance: { decrement: stake } },
+    });
+
+    return NextResponse.json(challenge, { status: 201 });
+  } catch (error) {
+    const { error: errorMessage, statusCode } = handleError(error, "CreateChallenge");
+    return NextResponse.json({ error: errorMessage }, { status: statusCode });
   }
-} 
+}
+
+export async function GET() {
+  try {
+    const session = await getServerSession(authOptions);
+    if (!session?.user) {
+      throw Errors.Unauthorized;
+    }
+
+    const challenges = await prisma.challenge.findMany({
+      where: {
+        status: "OPEN",
+        creatorId: { not: session.user.id },
+      },
+      include: {
+        creator: {
+          select: {
+            id: true,
+            name: true,
+            displayName: true,
+            image: true,
+          },
+        },
+        club: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+      },
+      orderBy: { createdAt: "desc" },
+    });
+
+    return NextResponse.json(challenges);
+  } catch (error) {
+    const { error: errorMessage, statusCode } = handleError(error, "GetChallenges");
+    return NextResponse.json({ error: errorMessage }, { status: statusCode });
+  }
+}

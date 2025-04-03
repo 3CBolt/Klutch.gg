@@ -1,35 +1,35 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { ChallengeType } from '@prisma/client';
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { ChallengeType } from "@prisma/client";
 
 export default function CreateChallengeForm() {
   const router = useRouter();
-  const [stake, setStake] = useState('');
+  const [stake, setStake] = useState("");
   const [type, setType] = useState<ChallengeType>(ChallengeType.KillRace);
-  const [opponentUsername, setOpponentUsername] = useState('');
-  const [error, setError] = useState('');
+  const [opponentUsername, setOpponentUsername] = useState("");
+  const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
+    setError("");
     setIsLoading(true);
 
     try {
       // Validate stake
       const stakeAmount = parseFloat(stake);
       if (isNaN(stakeAmount) || stakeAmount <= 0) {
-        setError('Stake must be a positive number');
+        setError("Stake must be a positive number");
         setIsLoading(false);
         return;
       }
 
-      const response = await fetch('/api/challenge/create', {
-        method: 'POST',
+      const response = await fetch("/api/challenge/create", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           stake: stakeAmount,
@@ -41,16 +41,18 @@ export default function CreateChallengeForm() {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || 'Failed to create challenge');
+        throw new Error(data.error || "Failed to create challenge");
       }
 
       // Refresh the challenges list before redirecting
       router.refresh();
-      
+
       // Redirect to the challenges page
-      router.push('/challenges');
+      router.push("/challenges");
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to create challenge');
+      setError(
+        err instanceof Error ? err.message : "Failed to create challenge",
+      );
     } finally {
       setIsLoading(false);
     }
@@ -65,7 +67,10 @@ export default function CreateChallengeForm() {
       )}
 
       <div>
-        <label htmlFor="stake" className="block text-sm font-medium text-gray-700">
+        <label
+          htmlFor="stake"
+          className="block text-sm font-medium text-gray-700"
+        >
           Stake Amount ($)
         </label>
         <div className="mt-1">
@@ -85,7 +90,10 @@ export default function CreateChallengeForm() {
       </div>
 
       <div>
-        <label htmlFor="type" className="block text-sm font-medium text-gray-700">
+        <label
+          htmlFor="type"
+          className="block text-sm font-medium text-gray-700"
+        >
           Challenge Type
         </label>
         <div className="mt-1">
@@ -105,7 +113,10 @@ export default function CreateChallengeForm() {
       </div>
 
       <div>
-        <label htmlFor="opponentUsername" className="block text-sm font-medium text-gray-700">
+        <label
+          htmlFor="opponentUsername"
+          className="block text-sm font-medium text-gray-700"
+        >
           Opponent Email (Optional)
         </label>
         <div className="mt-1">
@@ -127,9 +138,9 @@ export default function CreateChallengeForm() {
           disabled={isLoading}
           className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          {isLoading ? 'Creating...' : 'Create Challenge'}
+          {isLoading ? "Creating..." : "Create Challenge"}
         </button>
       </div>
     </form>
   );
-} 
+}

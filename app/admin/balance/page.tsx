@@ -1,15 +1,15 @@
-import { redirect } from 'next/navigation';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/app/api/auth/[...nextauth]/auth';
-import { prisma } from '@/app/lib/prisma';
-import BalanceManagementForm from './BalanceManagementForm';
+import { redirect } from "next/navigation";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/app/api/auth/[...nextauth]/auth";
+import { prisma } from "@/app/lib/prisma";
+import BalanceManagementForm from "./BalanceManagementForm";
 
 export default async function AdminBalancePage() {
   const session = await getServerSession(authOptions);
 
   // Check if user is admin
   if (!session?.user?.isAdmin) {
-    redirect('/');
+    redirect("/");
   }
 
   // Fetch all users for the dropdown
@@ -22,7 +22,7 @@ export default async function AdminBalancePage() {
       balance: true,
     },
     orderBy: {
-      email: 'asc',
+      email: "asc",
     },
   });
 
@@ -35,7 +35,8 @@ export default async function AdminBalancePage() {
               Balance Management
             </h1>
             <p className="text-sm text-gray-500 mb-8">
-              Use this page to manually adjust user balances for moderation purposes.
+              Use this page to manually adjust user balances for moderation
+              purposes.
             </p>
             <BalanceManagementForm users={users} />
           </div>
@@ -43,4 +44,4 @@ export default async function AdminBalancePage() {
       </div>
     </div>
   );
-} 
+}

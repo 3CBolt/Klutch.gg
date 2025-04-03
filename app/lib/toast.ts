@@ -1,4 +1,4 @@
-import { toast } from 'sonner';
+import { toast } from "sonner";
 
 interface ToastOptions {
   description?: string;
@@ -60,7 +60,7 @@ export const showToast = {
       loading: string;
       success: string;
       error: string;
-    }
+    },
   ) => {
     return toast.promise(promise, {
       loading,
@@ -68,4 +68,4 @@ export const showToast = {
       error,
     });
   },
-}; 
+};

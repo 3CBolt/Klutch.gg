@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { Challenge, User } from '@prisma/client';
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { Challenge, User } from "@prisma/client";
 
 type DisputedChallenge = Challenge & {
   creator: {
@@ -29,10 +29,10 @@ export default function DisputedChallengeList({ challenges }: Props) {
       setIsLoading(challengeId);
       setError(null);
 
-      const response = await fetch('/api/admin/resolve-dispute', {
-        method: 'POST',
+      const response = await fetch("/api/admin/resolve-dispute", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           challengeId,
@@ -43,12 +43,14 @@ export default function DisputedChallengeList({ challenges }: Props) {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || 'Failed to resolve dispute');
+        throw new Error(data.error || "Failed to resolve dispute");
       }
 
       router.refresh();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to resolve dispute');
+      setError(
+        err instanceof Error ? err.message : "Failed to resolve dispute",
+      );
     } finally {
       setIsLoading(null);
     }
@@ -110,23 +112,31 @@ export default function DisputedChallengeList({ challenges }: Props) {
                   ${challenge.stake.toFixed(2)}
                 </td>
                 <td className="px-3 py-4 text-sm text-gray-500">
-                  {challenge.disputeReason || 'No reason provided'}
+                  {challenge.disputeReason || "No reason provided"}
                 </td>
                 <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
                   <div className="flex space-x-2">
                     <button
-                      onClick={() => resolveDispute(challenge.id, challenge.creatorId)}
+                      onClick={() =>
+                        resolveDispute(challenge.id, challenge.creatorId)
+                      }
                       disabled={isLoading === challenge.id}
                       className="inline-flex items-center px-2.5 py-1.5 border border-transparent text-xs font-medium rounded text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
                     >
-                      {isLoading === challenge.id ? 'Processing...' : 'Creator Won'}
+                      {isLoading === challenge.id
+                        ? "Processing..."
+                        : "Creator Won"}
                     </button>
                     <button
-                      onClick={() => resolveDispute(challenge.id, challenge.opponentId!)}
+                      onClick={() =>
+                        resolveDispute(challenge.id, challenge.opponentId!)
+                      }
                       disabled={isLoading === challenge.id}
                       className="inline-flex items-center px-2.5 py-1.5 border border-transparent text-xs font-medium rounded text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
                     >
-                      {isLoading === challenge.id ? 'Processing...' : 'Opponent Won'}
+                      {isLoading === challenge.id
+                        ? "Processing..."
+                        : "Opponent Won"}
                     </button>
                   </div>
                 </td>
@@ -137,4 +147,4 @@ export default function DisputedChallengeList({ challenges }: Props) {
       </div>
     </div>
   );
-} 
+}

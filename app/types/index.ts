@@ -15,9 +15,9 @@ export type Challenge = {
   };
   opponentId?: string | null;
   stake: number;
-  type: 'KillRace' | 'OverUnder' | 'Survival';
-  status: 'Open' | 'InProgress' | 'Completed' | 'Disputed';
+  type: "KillRace" | "OverUnder" | "Survival";
+  status: "Open" | "InProgress" | "Completed" | "Disputed";
   winnerId?: string | null;
   createdAt: Date;
   updatedAt: Date;
-}; 
+};

@@ -1,11 +1,16 @@
-import Link from 'next/link';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '../api/auth/[...nextauth]/auth';
-import { prisma } from '@/lib/prisma';
-import { Button } from '@/app/components/ui/button';
-import { Card, CardHeader, CardContent, CardFooter } from '@/app/components/ui/card';
-import { Skeleton } from '@/app/components/ui/skeleton';
-import { Users, Plus, AlertCircle, ArrowRight } from 'lucide-react';
+import Link from "next/link";
+import { getServerSession } from "next-auth";
+import { authOptions } from "../api/auth/[...nextauth]/auth";
+import { prisma } from "@/lib/prisma";
+import { Button } from "@/app/components/ui/button";
+import {
+  Card,
+  CardHeader,
+  CardContent,
+  CardFooter,
+} from "@/app/components/ui/card";
+import { Skeleton } from "@/app/components/ui/skeleton";
+import { Users, Plus, AlertCircle, ArrowRight } from "lucide-react";
 
 function LoadingState() {
   return (
@@ -98,7 +103,9 @@ function ClubList({ clubs }: { clubs: Club[] }) {
                     </h3>
                     <ArrowRight className="h-5 w-5 text-muted-foreground opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all" />
                   </div>
-                  <p className="text-sm text-muted-foreground">Created by {club.owner.email}</p>
+                  <p className="text-sm text-muted-foreground">
+                    Created by {club.owner.email}
+                  </p>
                   {club.description && (
                     <p className="text-sm text-muted-foreground/80 line-clamp-2">
                       {club.description}
@@ -110,7 +117,8 @@ function ClubList({ clubs }: { clubs: Club[] }) {
             <CardFooter className="p-6 pt-0 border-t">
               <div className="flex items-center text-sm text-muted-foreground">
                 <Users className="mr-2 h-4 w-4" />
-                {club._count.members} {club._count.members === 1 ? 'member' : 'members'}
+                {club._count.members}{" "}
+                {club._count.members === 1 ? "member" : "members"}
               </div>
             </CardFooter>
           </Card>
@@ -122,7 +130,7 @@ function ClubList({ clubs }: { clubs: Club[] }) {
 
 export default async function ClubsPage() {
   const session = await getServerSession(authOptions);
-  
+
   if (!session?.user?.email) {
     return (
       <Card className="p-8 text-center">
@@ -157,7 +165,7 @@ export default async function ClubsPage() {
         },
       },
       orderBy: {
-        createdAt: 'desc',
+        createdAt: "desc",
       },
     });
 
@@ -185,7 +193,7 @@ export default async function ClubsPage() {
       </div>
     );
   } catch (error) {
-    console.error('Error loading clubs:', error);
+    console.error("Error loading clubs:", error);
     return <ErrorState error="Failed to load clubs. Please try again later." />;
   }
-} 
+}

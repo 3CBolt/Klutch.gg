@@ -1,14 +1,14 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { Button } from '@/app/components/ui/button';
-import { Input } from '@/app/components/ui/input';
-import { Label } from '@/app/components/ui/label';
-import { Textarea } from '@/app/components/ui/textarea';
-import { Card } from '@/app/components/ui/card';
-import { Loader2 } from 'lucide-react';
-import { showToast } from '@/app/lib/toast';
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { Button } from "@/app/components/ui/button";
+import { Input } from "@/app/components/ui/input";
+import { Label } from "@/app/components/ui/label";
+import { Textarea } from "@/app/components/ui/textarea";
+import { Card } from "@/app/components/ui/card";
+import { Loader2 } from "lucide-react";
+import { showToast } from "@/app/lib/toast";
 
 export default function CreateClubForm() {
   const router = useRouter();
@@ -20,28 +20,28 @@ export default function CreateClubForm() {
 
     const formData = new FormData(event.currentTarget);
     const data = {
-      name: formData.get('name'),
-      description: formData.get('description'),
+      name: formData.get("name"),
+      description: formData.get("description"),
     };
 
     try {
-      const response = await fetch('/api/clubs', {
-        method: 'POST',
+      const response = await fetch("/api/clubs", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify(data),
       });
 
       if (!response.ok) {
-        throw new Error('Failed to create club');
+        throw new Error("Failed to create club");
       }
 
       const club = await response.json();
-      showToast.success('Club created successfully');
+      showToast.success("Club created successfully");
       router.push(`/clubs/${club.id}`);
     } catch (error) {
-      showToast.error('Failed to create club');
+      showToast.error("Failed to create club");
     } finally {
       setIsLoading(false);
     }
@@ -52,12 +52,7 @@ export default function CreateClubForm() {
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
           <Label htmlFor="name">Club Name</Label>
-          <Input
-            id="name"
-            name="name"
-            placeholder="Enter club name"
-            required
-          />
+          <Input id="name" name="name" placeholder="Enter club name" required />
         </div>
 
         <div>
@@ -77,10 +72,10 @@ export default function CreateClubForm() {
               Creating...
             </>
           ) : (
-            'Create Club'
+            "Create Club"
           )}
         </Button>
       </form>
     </Card>
   );
-} 
+}

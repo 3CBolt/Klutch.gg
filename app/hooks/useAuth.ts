@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import { useSession } from 'next-auth/react';
+import { useSession } from "next-auth/react";
 
 interface User {
   id: string;
@@ -20,12 +20,14 @@ export function useAuth(): AuthState {
   const { data: session, status } = useSession();
 
   return {
-    isLoading: status === 'loading',
-    isAuthenticated: status === 'authenticated',
+    isLoading: status === "loading",
+    isAuthenticated: status === "authenticated",
     user: session?.user as User | null,
   };
 }
 
-export function isAuthenticated(auth: AuthState): auth is AuthState & { user: User } {
+export function isAuthenticated(
+  auth: AuthState,
+): auth is AuthState & { user: User } {
   return auth.isAuthenticated && auth.user !== null;
-} 
+}

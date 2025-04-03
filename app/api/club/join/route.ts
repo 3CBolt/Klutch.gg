@@ -1,10 +1,10 @@
-import { NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/app/api/auth/[...nextauth]/auth';
-import { prisma } from '@/lib/prisma';
-import { z } from 'zod';
-import { getIO } from '@/app/lib/server';
-import { ClubEventType } from '@prisma/client';
+import { NextResponse } from "next/server";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/app/api/auth/[...nextauth]/auth";
+import { prisma } from "@/lib/prisma";
+import { z } from "zod";
+import { getIO } from "@/app/lib/server";
+import { ClubEventType } from "@prisma/client";
 
 const joinClubSchema = z.object({
   clubId: z.string(),
@@ -13,11 +13,11 @@ const joinClubSchema = z.object({
 export async function POST(request: Request) {
   try {
     const session = await getServerSession(authOptions);
-    
+
     if (!session?.user?.email) {
       return NextResponse.json(
-        { error: 'You must be logged in to join a club' },
-        { status: 401 }
+        { error: "You must be logged in to join a club" },
+        { status: 401 },
       );
     }
 
@@ -26,8 +26,8 @@ export async function POST(request: Request) {
 
     if (!validation.success) {
       return NextResponse.json(
-        { error: 'Invalid request body' },
-        { status: 400 }
+        { error: "Invalid request body" },
+        { status: 400 },
       );
     }
 
@@ -56,18 +56,15 @@ export async function POST(request: Request) {
     });
 
     if (!club) {
-      return NextResponse.json(
-        { error: 'Club not found' },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: "Club not found" }, { status: 404 });
     }
 
     // Check if user is already a member
-    const isMember = club.members.some(member => member.id === user.id);
+    const isMember = club.members.some((member) => member.id === user.id);
     if (isMember) {
       return NextResponse.json(
-        { error: 'You are already a member of this club' },
-        { status: 400 }
+        { error: "You are already a member of this club" },
+        { status: 400 },
       );
     }
 
@@ -116,8 +113,8 @@ export async function POST(request: Request) {
     try {
       // Try to emit Socket.IO event if available
       const io = getIO();
-      io.to(`club:${clubId}`).emit('club:update', {
-        type: 'timeline_event',
+      io.to(`club:${clubId}`).emit("club:update", {
+        type: "timeline_event",
         event: {
           id: transactionResult.event.id,
           type: transactionResult.event.type,
@@ -129,19 +126,16 @@ export async function POST(request: Request) {
       });
     } catch (error) {
       // Log Socket.IO error but don't fail the request
-      console.warn('Socket.IO emit failed:', error);
+      console.warn("Socket.IO emit failed:", error);
     }
 
-    return NextResponse.json({ 
-      message: 'Successfully joined club',
+    return NextResponse.json({
+      message: "Successfully joined club",
       club: transactionResult.club,
       event: transactionResult.event,
     });
   } catch (error) {
-    console.error('Error joining club:', error);
-    return NextResponse.json(
-      { error: 'Failed to join club' },
-      { status: 500 }
-    );
+    console.error("Error joining club:", error);
+    return NextResponse.json({ error: "Failed to join club" }, { status: 500 });
   }
-} 
+}

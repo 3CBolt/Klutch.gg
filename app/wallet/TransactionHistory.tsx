@@ -1,6 +1,11 @@
-import { TransactionType } from '@prisma/client';
-import { format } from 'date-fns';
-import { ArrowDownCircle, ArrowUpCircle, RefreshCw, Trophy } from 'lucide-react';
+import { TransactionType } from "@prisma/client";
+import { format } from "date-fns";
+import {
+  ArrowDownCircle,
+  ArrowUpCircle,
+  RefreshCw,
+  Trophy,
+} from "lucide-react";
 
 interface Transaction {
   id: string;
@@ -20,22 +25,26 @@ function EmptyState() {
   return (
     <div className="text-center py-12">
       <p className="text-sm text-gray-500">No transactions yet</p>
-      <p className="text-sm text-gray-500 mt-1">Your transaction history will appear here</p>
+      <p className="text-sm text-gray-500 mt-1">
+        Your transaction history will appear here
+      </p>
     </div>
   );
 }
 
-export default function TransactionHistory({ transactions }: TransactionHistoryProps) {
+export default function TransactionHistory({
+  transactions,
+}: TransactionHistoryProps) {
   const getTransactionTypeLabel = (type: TransactionType) => {
     switch (type) {
-      case 'DEPOSIT':
-        return 'Deposit';
-      case 'CHALLENGE_ENTRY':
-        return 'Entry Fee';
-      case 'CHALLENGE_WINNINGS':
-        return 'Winnings';
-      case 'CHALLENGE_REFUND':
-        return 'Refund';
+      case "DEPOSIT":
+        return "Deposit";
+      case "CHALLENGE_ENTRY":
+        return "Entry Fee";
+      case "CHALLENGE_WINNINGS":
+        return "Winnings";
+      case "CHALLENGE_REFUND":
+        return "Refund";
       default:
         return type;
     }
@@ -43,13 +52,13 @@ export default function TransactionHistory({ transactions }: TransactionHistoryP
 
   const getTransactionIcon = (type: TransactionType) => {
     switch (type) {
-      case 'DEPOSIT':
+      case "DEPOSIT":
         return <ArrowDownCircle className="h-5 w-5 text-green-500" />;
-      case 'CHALLENGE_ENTRY':
+      case "CHALLENGE_ENTRY":
         return <ArrowUpCircle className="h-5 w-5 text-red-500" />;
-      case 'CHALLENGE_WINNINGS':
+      case "CHALLENGE_WINNINGS":
         return <Trophy className="h-5 w-5 text-yellow-500" />;
-      case 'CHALLENGE_REFUND':
+      case "CHALLENGE_REFUND":
         return <RefreshCw className="h-5 w-5 text-blue-500" />;
       default:
         return null;
@@ -58,15 +67,15 @@ export default function TransactionHistory({ transactions }: TransactionHistoryP
 
   const getAmountColor = (type: TransactionType) => {
     switch (type) {
-      case 'DEPOSIT':
-      case 'CHALLENGE_WINNINGS':
-        return 'text-green-600';
-      case 'CHALLENGE_ENTRY':
-        return 'text-red-600';
-      case 'CHALLENGE_REFUND':
-        return 'text-blue-600';
+      case "DEPOSIT":
+      case "CHALLENGE_WINNINGS":
+        return "text-green-600";
+      case "CHALLENGE_ENTRY":
+        return "text-red-600";
+      case "CHALLENGE_REFUND":
+        return "text-blue-600";
       default:
-        return 'text-gray-600';
+        return "text-gray-600";
     }
   };
 
@@ -95,7 +104,10 @@ export default function TransactionHistory({ transactions }: TransactionHistoryP
         </thead>
         <tbody className="bg-white divide-y divide-gray-200">
           {transactions.map((transaction) => (
-            <tr key={transaction.id} className="hover:bg-gray-50 transition-colors">
+            <tr
+              key={transaction.id}
+              className="hover:bg-gray-50 transition-colors"
+            >
               <td className="px-6 py-4 whitespace-nowrap">
                 <div className="flex items-center">
                   {getTransactionIcon(transaction.type)}
@@ -104,18 +116,20 @@ export default function TransactionHistory({ transactions }: TransactionHistoryP
                   </span>
                 </div>
               </td>
-              <td className={`px-6 py-4 whitespace-nowrap text-sm font-medium ${getAmountColor(transaction.type)}`}>
-                {transaction.type === 'CHALLENGE_ENTRY' ? '-' : '+'}
-                {new Intl.NumberFormat('en-US', {
-                  style: 'currency',
-                  currency: 'USD',
+              <td
+                className={`px-6 py-4 whitespace-nowrap text-sm font-medium ${getAmountColor(transaction.type)}`}
+              >
+                {transaction.type === "CHALLENGE_ENTRY" ? "-" : "+"}
+                {new Intl.NumberFormat("en-US", {
+                  style: "currency",
+                  currency: "USD",
                 }).format(transaction.amount)}
               </td>
               <td className="px-6 py-4 text-sm text-gray-500">
-                {transaction.description || 'N/A'}
+                {transaction.description || "N/A"}
               </td>
               <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                {format(new Date(transaction.createdAt), 'MMM d, yyyy h:mm a')}
+                {format(new Date(transaction.createdAt), "MMM d, yyyy h:mm a")}
               </td>
             </tr>
           ))}
@@ -123,4 +137,4 @@ export default function TransactionHistory({ transactions }: TransactionHistoryP
       </table>
     </div>
   );
-} 
+}

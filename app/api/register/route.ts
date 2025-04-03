@@ -1,39 +1,77 @@
 import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
+import { logger } from "@/lib/logger";
+import { z } from "zod";
+
+// Define validation schema
+const RegisterSchema = z.object({
+  email: z.string().email("Invalid email address"),
+  name: z.string().min(2, "Name must be at least 2 characters"),
+  password: z.string().min(8, "Password must be at least 8 characters"),
+});
+
+type RegisterInput = z.infer<typeof RegisterSchema>;
 
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { email, name, password } = body;
-
-    if (!email || !name || !password) {
-      return new NextResponse("Missing fields", { status: 400 });
+    
+    // Validate input
+    const result = RegisterSchema.safeParse(body);
+    if (!result.success) {
+      const errorMessage = result.error.errors.map(err => 
+        `${err.path.join('.')}: ${err.message}`
+      ).join(', ');
+      
+      logger.warn('[Registration Validation Failed]', errorMessage);
+      return NextResponse.json(
+        { error: "Validation failed", details: errorMessage },
+        { status: 400 }
+      );
     }
 
-    const exist = await prisma.user.findUnique({
-      where: {
-        email,
-      },
+    const { email, name, password } = result.data;
+
+    // Check for existing user
+    const existingUser = await prisma.user.findUnique({
+      where: { email },
+      select: { id: true },
     });
 
-    if (exist) {
-      return new NextResponse("Email already exists", { status: 400 });
+    if (existingUser) {
+      logger.warn('[Registration Failed] Email already exists:', email);
+      return NextResponse.json(
+        { error: "Email already registered" },
+        { status: 400 }
+      );
     }
 
+    // Create new user
     const hashedPassword = await bcrypt.hash(password, 10);
-
     const user = await prisma.user.create({
       data: {
         email,
         name,
         password: hashedPassword,
+        displayName: name, // Set initial display name same as name
+      },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        displayName: true,
+        createdAt: true,
       },
     });
 
-    return NextResponse.json(user);
+    logger.info('[Registration Success]', { userId: user.id, email: user.email });
+    return NextResponse.json({ user }, { status: 201 });
   } catch (error) {
-    console.log("[REGISTRATION_ERROR]", error);
-    return new NextResponse("Internal Error", { status: 500 });
+    logger.error('[Registration Failed] Unexpected error:', error);
+    return NextResponse.json(
+      { error: "Failed to create user" },
+      { status: 500 }
+    );
   }
-} 
+}

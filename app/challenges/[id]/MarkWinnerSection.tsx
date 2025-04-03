@@ -1,10 +1,10 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { useSocket } from '@/app/hooks/useSocket';
-import { Button } from '@/app/components/ui/button';
-import { toast } from 'sonner';
-import { ChallengeStatus } from '@prisma/client';
+import { useState } from "react";
+import { useSocket } from "@/app/hooks/useSocket";
+import { Button } from "@/app/components/ui/button";
+import { toast } from "sonner";
+import { ChallengeStatus } from "@prisma/client";
 
 interface MarkWinnerSectionProps {
   challengeId: string;
@@ -22,18 +22,18 @@ export const MarkWinnerSection = ({
   const [isLoading, setIsLoading] = useState(false);
   const { socket } = useSocket();
 
-  const handleMarkWinner = async (winner: 'creator' | 'opponent') => {
+  const handleMarkWinner = async (winner: "creator" | "opponent") => {
     try {
       setIsLoading(true);
-      socket?.emit('challenge:winner', {
+      socket?.emit("challenge:winner", {
         challengeId,
         winner,
       });
-      toast.success('Winner marked successfully');
+      toast.success("Winner marked successfully");
       onWinnerMarked();
     } catch (error) {
-      console.error('Failed to mark winner:', error);
-      toast.error('Failed to mark winner');
+      console.error("Failed to mark winner:", error);
+      toast.error("Failed to mark winner");
     } finally {
       setIsLoading(false);
     }
@@ -42,14 +42,14 @@ export const MarkWinnerSection = ({
   const handleDispute = async () => {
     try {
       setIsLoading(true);
-      socket?.emit('challenge:dispute', {
+      socket?.emit("challenge:dispute", {
         challengeId,
       });
-      toast.success('Challenge disputed');
+      toast.success("Challenge disputed");
       onWinnerMarked();
     } catch (error) {
-      console.error('Failed to dispute challenge:', error);
-      toast.error('Failed to dispute challenge');
+      console.error("Failed to dispute challenge:", error);
+      toast.error("Failed to dispute challenge");
     } finally {
       setIsLoading(false);
     }
@@ -65,20 +65,20 @@ export const MarkWinnerSection = ({
       <div className="flex gap-4">
         {isCreator && (
           <Button
-            onClick={() => handleMarkWinner('creator')}
+            onClick={() => handleMarkWinner("creator")}
             disabled={isLoading}
             className="bg-primary text-primary-foreground hover:bg-primary/90"
           >
-            {isLoading ? 'Marking...' : 'Mark Me as Winner'}
+            {isLoading ? "Marking..." : "Mark Me as Winner"}
           </Button>
         )}
         {isOpponent && (
           <Button
-            onClick={() => handleMarkWinner('opponent')}
+            onClick={() => handleMarkWinner("opponent")}
             disabled={isLoading}
             className="bg-primary text-primary-foreground hover:bg-primary/90"
           >
-            {isLoading ? 'Marking...' : 'Mark Me as Winner'}
+            {isLoading ? "Marking..." : "Mark Me as Winner"}
           </Button>
         )}
         <Button
@@ -86,9 +86,9 @@ export const MarkWinnerSection = ({
           disabled={isLoading}
           className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
         >
-          {isLoading ? 'Disputing...' : 'Dispute Challenge'}
+          {isLoading ? "Disputing..." : "Dispute Challenge"}
         </Button>
       </div>
     </div>
   );
-}; 
+};

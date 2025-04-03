@@ -1,10 +1,10 @@
-import { NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/app/api/auth/[...nextauth]/auth';
-import { prisma } from '@/lib/prisma';
-import { z } from 'zod';
-import { initSocket } from '@/app/lib/socket';
-import { ClubEventType } from '@prisma/client';
+import { NextResponse } from "next/server";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/app/api/auth/[...nextauth]/auth";
+import { prisma } from "@/lib/prisma";
+import { z } from "zod";
+import { initSocket } from "@/app/lib/socket";
+import { ClubEventType } from "@prisma/client";
 
 const deleteClubSchema = z.object({
   clubId: z.string(),
@@ -13,11 +13,11 @@ const deleteClubSchema = z.object({
 export async function POST(request: Request) {
   try {
     const session = await getServerSession(authOptions);
-    
+
     if (!session?.user?.email) {
       return NextResponse.json(
-        { error: 'You must be logged in to delete a club' },
-        { status: 401 }
+        { error: "You must be logged in to delete a club" },
+        { status: 401 },
       );
     }
 
@@ -26,8 +26,8 @@ export async function POST(request: Request) {
 
     if (!validation.success) {
       return NextResponse.json(
-        { error: 'Invalid request body' },
-        { status: 400 }
+        { error: "Invalid request body" },
+        { status: 400 },
       );
     }
 
@@ -39,10 +39,7 @@ export async function POST(request: Request) {
     });
 
     if (!user) {
-      return NextResponse.json(
-        { error: 'User not found' },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
     // Check if club exists and user is the owner
@@ -65,16 +62,13 @@ export async function POST(request: Request) {
     });
 
     if (!club) {
-      return NextResponse.json(
-        { error: 'Club not found' },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: "Club not found" }, { status: 404 });
     }
 
     if (club.owner.id !== user.id) {
       return NextResponse.json(
-        { error: 'Only the club owner can delete the club' },
-        { status: 403 }
+        { error: "Only the club owner can delete the club" },
+        { status: 403 },
       );
     }
 
@@ -82,7 +76,7 @@ export async function POST(request: Request) {
     const transactionResult = await prisma.$transaction(async (tx) => {
       // Create timeline events for all members
       const events = await Promise.all(
-        club.members.map(member =>
+        club.members.map((member) =>
           tx.clubEvent.create({
             data: {
               type: ClubEventType.MEMBER_LEFT,
@@ -98,8 +92,8 @@ export async function POST(request: Request) {
                 },
               },
             },
-          })
-        )
+          }),
+        ),
       );
 
       // Delete club
@@ -115,9 +109,9 @@ export async function POST(request: Request) {
     const io = await initSocket(res as any);
 
     // Emit events for each member leaving
-    transactionResult.events.forEach(event => {
-      io.to(`club:${clubId}`).emit('club:update', {
-        type: 'timeline_event',
+    transactionResult.events.forEach((event) => {
+      io.to(`club:${clubId}`).emit("club:update", {
+        type: "timeline_event",
         event: {
           id: event.id,
           type: event.type,
@@ -129,15 +123,15 @@ export async function POST(request: Request) {
       });
     });
 
-    return NextResponse.json({ 
-      message: 'Successfully deleted club',
+    return NextResponse.json({
+      message: "Successfully deleted club",
       events: transactionResult.events,
     });
   } catch (error) {
-    console.error('Error deleting club:', error);
+    console.error("Error deleting club:", error);
     return NextResponse.json(
-      { error: 'Failed to delete club' },
-      { status: 500 }
+      { error: "Failed to delete club" },
+      { status: 500 },
     );
   }
-} 
+}

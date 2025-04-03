@@ -1,5 +1,5 @@
-import { useEffect, useRef } from 'react';
-import { io, Socket } from 'socket.io-client';
+import { useEffect, useRef } from "react";
+import { io, Socket } from "socket.io-client";
 
 export const useSocket = () => {
   const socketRef = useRef<Socket | null>(null);
@@ -7,7 +7,7 @@ export const useSocket = () => {
   useEffect(() => {
     // Initialize socket connection
     socketRef.current = io({
-      path: '/api/socketio',
+      path: "/api/socketio",
       addTrailingSlash: false,
     });
 
@@ -21,30 +21,30 @@ export const useSocket = () => {
 
   const subscribeToChallenge = (challengeId: string) => {
     if (socketRef.current) {
-      socketRef.current.emit('subscribe:challenge', challengeId);
+      socketRef.current.emit("subscribe:challenge", challengeId);
     }
   };
 
   const subscribeToClub = (clubId: string) => {
     if (socketRef.current) {
-      socketRef.current.emit('subscribe:club', clubId);
+      socketRef.current.emit("subscribe:club", clubId);
     }
   };
 
   const onChallengeUpdate = (callback: (data: any) => void) => {
     if (socketRef.current) {
-      socketRef.current.on('challenge:update', callback);
+      socketRef.current.on("challenge:update", callback);
       return () => {
-        socketRef.current?.off('challenge:update', callback);
+        socketRef.current?.off("challenge:update", callback);
       };
     }
   };
 
   const onClubUpdate = (callback: (data: any) => void) => {
     if (socketRef.current) {
-      socketRef.current.on('club:update', callback);
+      socketRef.current.on("club:update", callback);
       return () => {
-        socketRef.current?.off('club:update', callback);
+        socketRef.current?.off("club:update", callback);
       };
     }
   };
@@ -56,4 +56,4 @@ export const useSocket = () => {
     onChallengeUpdate,
     onClubUpdate,
   };
-}; 
+};

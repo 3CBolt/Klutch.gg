@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import { useEffect } from 'react';
+import { useEffect } from "react";
 
 export default function Error({
   error,
@@ -19,10 +19,13 @@ export default function Error({
         <div className="bg-white shadow sm:rounded-lg">
           <div className="px-4 py-5 sm:p-6">
             <div className="text-center">
-              <h3 className="text-lg font-medium leading-6 text-gray-900">Something went wrong!</h3>
+              <h3 className="text-lg font-medium leading-6 text-gray-900">
+                Something went wrong!
+              </h3>
               <div className="mt-2">
                 <p className="text-sm text-gray-500">
-                  {error.message || 'An error occurred while loading the profile.'}
+                  {error.message ||
+                    "An error occurred while loading the profile."}
                 </p>
               </div>
               <div className="mt-6">
@@ -40,4 +43,4 @@ export default function Error({
       </div>
     </div>
   );
-} 
+}

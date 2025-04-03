@@ -1,16 +1,16 @@
-import { redirect } from 'next/navigation';
-import { getServerSession } from 'next-auth';
-import Link from 'next/link';
-import { authOptions } from '@/app/api/auth/[...nextauth]/auth';
-import { getChallengeHistory } from '@/app/lib/actions/challenges';
-import { formatCurrency } from '@/app/lib/utils';
-import { ChallengeStatus } from '@prisma/client';
-import { Suspense } from 'react';
+import { redirect } from "next/navigation";
+import { getServerSession } from "next-auth";
+import Link from "next/link";
+import { authOptions } from "@/app/api/auth/[...nextauth]/auth";
+import { getChallengeHistory } from "@/app/lib/actions/challenges";
+import { formatCurrency } from "@/app/lib/utils";
+import { ChallengeStatus } from "@prisma/client";
+import { Suspense } from "react";
 
 function formatStatus(status: ChallengeStatus): string {
   const statusMap = {
-    [ChallengeStatus.COMPLETED]: 'Completed',
-    [ChallengeStatus.DISPUTED]: 'Disputed'
+    [ChallengeStatus.COMPLETED]: "Completed",
+    [ChallengeStatus.DISPUTED]: "Disputed",
   };
   return statusMap[status] || status;
 }
@@ -43,8 +43,12 @@ function EmptyState() {
           d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
         />
       </svg>
-      <h3 className="mt-2 text-sm font-semibold text-gray-900">No challenge history found</h3>
-      <p className="mt-1 text-sm text-gray-500">Complete some challenges to see them here.</p>
+      <h3 className="mt-2 text-sm font-semibold text-gray-900">
+        No challenge history found
+      </h3>
+      <p className="mt-1 text-sm text-gray-500">
+        Complete some challenges to see them here.
+      </p>
       <div className="mt-6">
         <Link
           href="/challenges"
@@ -63,7 +67,11 @@ function ErrorState({ error }: { error: string }) {
       <div className="rounded-md bg-red-50 p-4">
         <div className="flex">
           <div className="flex-shrink-0">
-            <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+            <svg
+              className="h-5 w-5 text-red-400"
+              viewBox="0 0 20 20"
+              fill="currentColor"
+            >
               <path
                 fillRule="evenodd"
                 d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
@@ -72,7 +80,9 @@ function ErrorState({ error }: { error: string }) {
             </svg>
           </div>
           <div className="ml-3">
-            <h3 className="text-sm font-medium text-red-800">Error loading challenge history</h3>
+            <h3 className="text-sm font-medium text-red-800">
+              Error loading challenge history
+            </h3>
             <div className="mt-2 text-sm text-red-700">
               <p>{error}</p>
             </div>
@@ -83,7 +93,11 @@ function ErrorState({ error }: { error: string }) {
   );
 }
 
-function ChallengeHistoryList({ challenges }: { challenges: Awaited<ReturnType<typeof getChallengeHistory>> }) {
+function ChallengeHistoryList({
+  challenges,
+}: {
+  challenges: Awaited<ReturnType<typeof getChallengeHistory>>;
+}) {
   if (!Array.isArray(challenges) || challenges.length === 0) {
     return <EmptyState />;
   }
@@ -93,25 +107,46 @@ function ChallengeHistoryList({ challenges }: { challenges: Awaited<ReturnType<t
       <table className="min-w-full divide-y divide-gray-300">
         <thead className="bg-gray-50">
           <tr>
-            <th scope="col" className="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-6">
+            <th
+              scope="col"
+              className="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-6"
+            >
               Date
             </th>
-            <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
+            <th
+              scope="col"
+              className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900"
+            >
               Creator
             </th>
-            <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
+            <th
+              scope="col"
+              className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900"
+            >
               Opponent
             </th>
-            <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
+            <th
+              scope="col"
+              className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900"
+            >
               Type
             </th>
-            <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
+            <th
+              scope="col"
+              className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900"
+            >
               Stake
             </th>
-            <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
+            <th
+              scope="col"
+              className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900"
+            >
               Status
             </th>
-            <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
+            <th
+              scope="col"
+              className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900"
+            >
               Winner
             </th>
             <th scope="col" className="relative py-3.5 pl-3 pr-4 sm:pr-6">
@@ -126,16 +161,28 @@ function ChallengeHistoryList({ challenges }: { challenges: Awaited<ReturnType<t
                 {new Date(challenge.updatedAt).toLocaleDateString()}
               </td>
               <td className="whitespace-nowrap px-3 py-4 text-sm font-medium text-gray-900">
-                <Link href={`/profile/${challenge.creator.id}`} className="text-indigo-600 hover:text-indigo-900">
-                  {challenge.creator.displayName || challenge.creator.name || challenge.creator.email}
+                <Link
+                  href={`/profile/${challenge.creator.id}`}
+                  className="text-indigo-600 hover:text-indigo-900"
+                >
+                  {challenge.creator.displayName ||
+                    challenge.creator.name ||
+                    challenge.creator.email}
                 </Link>
               </td>
               <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
                 {challenge.opponent ? (
-                  <Link href={`/profile/${challenge.opponent.id}`} className="text-indigo-600 hover:text-indigo-900">
-                    {challenge.opponent.displayName || challenge.opponent.name || challenge.opponent.email}
+                  <Link
+                    href={`/profile/${challenge.opponent.id}`}
+                    className="text-indigo-600 hover:text-indigo-900"
+                  >
+                    {challenge.opponent.displayName ||
+                      challenge.opponent.name ||
+                      challenge.opponent.email}
                   </Link>
-                ) : '-'}
+                ) : (
+                  "-"
+                )}
               </td>
               <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
                 {challenge.type}
@@ -144,20 +191,31 @@ function ChallengeHistoryList({ challenges }: { challenges: Awaited<ReturnType<t
                 {formatCurrency(challenge.stake)}
               </td>
               <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                  challenge.status === ChallengeStatus.COMPLETED ? 'bg-green-100 text-green-800' :
-                  challenge.status === ChallengeStatus.DISPUTED ? 'bg-red-100 text-red-800' :
-                  'bg-gray-100 text-gray-800'
-                }`}>
+                <span
+                  className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                    challenge.status === ChallengeStatus.COMPLETED
+                      ? "bg-green-100 text-green-800"
+                      : challenge.status === ChallengeStatus.DISPUTED
+                        ? "bg-red-100 text-red-800"
+                        : "bg-gray-100 text-gray-800"
+                  }`}
+                >
                   {formatStatus(challenge.status)}
                 </span>
               </td>
               <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
                 {challenge.winner ? (
-                  <Link href={`/profile/${challenge.winner.id}`} className="text-indigo-600 hover:text-indigo-900">
-                    {challenge.winner.displayName || challenge.winner.name || challenge.winner.email}
+                  <Link
+                    href={`/profile/${challenge.winner.id}`}
+                    className="text-indigo-600 hover:text-indigo-900"
+                  >
+                    {challenge.winner.displayName ||
+                      challenge.winner.name ||
+                      challenge.winner.email}
                   </Link>
-                ) : '-'}
+                ) : (
+                  "-"
+                )}
               </td>
               <td className="relative whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-6">
                 <Link
@@ -176,14 +234,14 @@ function ChallengeHistoryList({ challenges }: { challenges: Awaited<ReturnType<t
 }
 
 export default async function ChallengeHistoryPage({
-  searchParams
+  searchParams,
 }: {
-  searchParams: { status?: string }
+  searchParams: { status?: string };
 }) {
   const session = await getServerSession(authOptions);
 
   if (!session?.user?.email) {
-    redirect('/login');
+    redirect("/login");
     return null;
   }
 
@@ -196,7 +254,9 @@ export default async function ChallengeHistoryPage({
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="sm:flex sm:items-center">
             <div className="sm:flex-auto">
-              <h1 className="text-2xl font-semibold text-gray-900">Challenge History</h1>
+              <h1 className="text-2xl font-semibold text-gray-900">
+                Challenge History
+              </h1>
               <p className="mt-2 text-sm text-gray-700">
                 View your completed and disputed challenges
               </p>
@@ -205,7 +265,9 @@ export default async function ChallengeHistoryPage({
               <Link
                 href="/challenges/history"
                 className={`inline-flex items-center px-3 py-2 text-sm font-medium rounded-md ${
-                  !statusFilter ? 'bg-indigo-600 text-white' : 'text-gray-700 bg-white hover:bg-gray-50'
+                  !statusFilter
+                    ? "bg-indigo-600 text-white"
+                    : "text-gray-700 bg-white hover:bg-gray-50"
                 }`}
               >
                 All
@@ -213,7 +275,9 @@ export default async function ChallengeHistoryPage({
               <Link
                 href="/challenges/history?status=COMPLETED"
                 className={`inline-flex items-center px-3 py-2 text-sm font-medium rounded-md ${
-                  statusFilter === ChallengeStatus.COMPLETED ? 'bg-indigo-600 text-white' : 'text-gray-700 bg-white hover:bg-gray-50'
+                  statusFilter === ChallengeStatus.COMPLETED
+                    ? "bg-indigo-600 text-white"
+                    : "text-gray-700 bg-white hover:bg-gray-50"
                 }`}
               >
                 Completed
@@ -221,7 +285,9 @@ export default async function ChallengeHistoryPage({
               <Link
                 href="/challenges/history?status=DISPUTED"
                 className={`inline-flex items-center px-3 py-2 text-sm font-medium rounded-md ${
-                  statusFilter === ChallengeStatus.DISPUTED ? 'bg-indigo-600 text-white' : 'text-gray-700 bg-white hover:bg-gray-50'
+                  statusFilter === ChallengeStatus.DISPUTED
+                    ? "bg-indigo-600 text-white"
+                    : "text-gray-700 bg-white hover:bg-gray-50"
                 }`}
               >
                 Disputed
@@ -237,7 +303,9 @@ export default async function ChallengeHistoryPage({
       </div>
     );
   } catch (error) {
-    console.error('Error in ChallengeHistoryPage:', error);
-    return <ErrorState error="An unexpected error occurred. Please try again later." />;
+    console.error("Error in ChallengeHistoryPage:", error);
+    return (
+      <ErrorState error="An unexpected error occurred. Please try again later." />
+    );
   }
-} 
+}

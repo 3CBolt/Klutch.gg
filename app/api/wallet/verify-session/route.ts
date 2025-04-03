@@ -1,60 +1,72 @@
-import { NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/app/api/auth/[...nextauth]/auth';
-import { stripe } from '@/app/lib/stripe';
-import { prisma } from '@/app/lib/prisma';
+import { NextResponse } from "next/server";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/app/api/auth/[...nextauth]/auth";
+import { stripe } from "@/app/lib/stripe";
+import { prisma } from "@/app/lib/prisma";
+import { handleError, Errors } from "@/lib/errors";
+import { z } from "zod";
+
+const VerifySessionSchema = z.object({
+  session_id: z.string().min(1, "Session ID is required"),
+});
 
 export async function GET(request: Request) {
   try {
     const session = await getServerSession(authOptions);
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    if (!session?.user) {
+      throw Errors.Unauthorized;
     }
 
-    // Get the session ID from the URL
+    // Get and validate the session ID from the URL
     const { searchParams } = new URL(request.url);
-    const sessionId = searchParams.get('session_id');
+    const result = VerifySessionSchema.safeParse({
+      session_id: searchParams.get("session_id"),
+    });
 
-    if (!sessionId) {
-      return NextResponse.json({ error: 'Session ID is required' }, { status: 400 });
+    if (!result.success) {
+      throw Errors.ValidationError(result.error.errors[0].message);
     }
+
+    const { session_id } = result.data;
 
     // Retrieve the Stripe session
-    const stripeSession = await stripe.checkout.sessions.retrieve(sessionId);
+    const stripeSession = await stripe.checkout.sessions.retrieve(session_id);
 
     // Verify that this session belongs to the current user
     if (stripeSession.client_reference_id !== session.user.id) {
-      return NextResponse.json({ error: 'Invalid session' }, { status: 403 });
+      throw Errors.Forbidden;
     }
 
     // Check if payment was successful
-    if (stripeSession.payment_status !== 'paid') {
-      return NextResponse.json({ success: false, status: stripeSession.payment_status });
+    if (stripeSession.payment_status !== "paid") {
+      return NextResponse.json({
+        success: false,
+        status: stripeSession.payment_status,
+      });
     }
 
     // Get the amount from the session
-    const amount = stripeSession.amount_total ? stripeSession.amount_total / 100 : 0;
+    const amount = stripeSession.amount_total
+      ? stripeSession.amount_total / 100
+      : 0;
 
     // Update user's wallet balance
     await prisma.user.update({
       where: { id: session.user.id },
       data: {
         balance: {
-          increment: amount
-        }
-      }
+          increment: amount,
+        },
+      },
     });
 
-    return NextResponse.json({ 
-      success: true, 
+    return NextResponse.json({
+      success: true,
       amount,
-      status: stripeSession.payment_status 
+      status: stripeSession.payment_status,
     });
   } catch (error) {
-    console.error('Error verifying session:', error);
-    return NextResponse.json(
-      { error: 'Failed to verify session' },
-      { status: 500 }
-    );
+    const { error: errorMessage, statusCode } = handleError(error, "VerifySession");
+    return NextResponse.json({ error: errorMessage }, { status: statusCode });
   }
-} 
+}

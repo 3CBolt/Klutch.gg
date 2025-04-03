@@ -1,8 +1,8 @@
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/app/api/auth/[...nextauth]/auth';
-import { redirect } from 'next/navigation';
-import { prisma } from '@/lib/prisma';
-import EditProfileForm from '@/app/components/EditProfileForm';
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/app/api/auth/[...nextauth]/auth";
+import { redirect } from "next/navigation";
+import { prisma } from "@/lib/prisma";
+import EditProfileForm from "@/app/components/EditProfileForm";
 
 async function getProfile(id: string) {
   try {
@@ -30,8 +30,8 @@ async function getProfile(id: string) {
 
     return profile;
   } catch (error) {
-    console.error('Error fetching profile:', error);
-    throw new Error('Failed to fetch profile');
+    console.error("Error fetching profile:", error);
+    throw new Error("Failed to fetch profile");
   }
 }
 
@@ -43,13 +43,13 @@ export default async function EditProfilePage({
   const session = await getServerSession(authOptions);
 
   if (!session?.user?.id || session.user.id !== params.id) {
-    redirect('/');
+    redirect("/");
   }
 
   const profile = await getProfile(params.id);
 
   if (!profile) {
-    redirect('/');
+    redirect("/");
   }
 
   return (
@@ -57,11 +57,13 @@ export default async function EditProfilePage({
       <div className="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8">
         <div className="bg-white shadow sm:rounded-lg">
           <div className="px-4 py-5 sm:p-6">
-            <h1 className="text-2xl font-bold text-gray-900 mb-6">Edit Profile</h1>
+            <h1 className="text-2xl font-bold text-gray-900 mb-6">
+              Edit Profile
+            </h1>
             <EditProfileForm profile={profile} />
           </div>
         </div>
       </div>
     </div>
   );
-} 
+}

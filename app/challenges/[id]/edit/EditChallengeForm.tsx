@@ -1,9 +1,9 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { Challenge, ChallengeType } from '@prisma/client';
-import toast from 'react-hot-toast';
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { Challenge, ChallengeType } from "@prisma/client";
+import toast from "react-hot-toast";
 
 interface EditChallengeFormProps {
   challenge: Challenge & {
@@ -14,11 +14,15 @@ interface EditChallengeFormProps {
   };
 }
 
-export default function EditChallengeForm({ challenge }: EditChallengeFormProps) {
+export default function EditChallengeForm({
+  challenge,
+}: EditChallengeFormProps) {
   const router = useRouter();
   const [stake, setStake] = useState(challenge.stake.toString());
   const [type, setType] = useState<ChallengeType>(challenge.type);
-  const [opponentUsername, setOpponentUsername] = useState(challenge.opponentId || '');
+  const [opponentUsername, setOpponentUsername] = useState(
+    challenge.opponentId || "",
+  );
   const [isLoading, setIsLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -29,14 +33,14 @@ export default function EditChallengeForm({ challenge }: EditChallengeFormProps)
       // Validate stake
       const stakeAmount = parseFloat(stake);
       if (isNaN(stakeAmount) || stakeAmount <= 0) {
-        toast.error('Stake must be a positive number');
+        toast.error("Stake must be a positive number");
         return;
       }
 
       const response = await fetch(`/api/challenge/${challenge.id}`, {
-        method: 'PATCH',
+        method: "PATCH",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           stake: stakeAmount,
@@ -48,18 +52,20 @@ export default function EditChallengeForm({ challenge }: EditChallengeFormProps)
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || 'Failed to update challenge');
+        throw new Error(data.error || "Failed to update challenge");
       }
 
-      toast.success('Challenge updated successfully');
-      
+      toast.success("Challenge updated successfully");
+
       // Refresh the challenges list before redirecting
       router.refresh();
-      
+
       // Redirect to the challenge details page
       router.push(`/challenges/${challenge.id}`);
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Failed to update challenge');
+      toast.error(
+        err instanceof Error ? err.message : "Failed to update challenge",
+      );
     } finally {
       setIsLoading(false);
     }
@@ -68,7 +74,10 @@ export default function EditChallengeForm({ challenge }: EditChallengeFormProps)
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       <div>
-        <label htmlFor="stake" className="block text-sm font-medium text-gray-700">
+        <label
+          htmlFor="stake"
+          className="block text-sm font-medium text-gray-700"
+        >
           Stake Amount ($)
         </label>
         <div className="mt-1">
@@ -88,7 +97,10 @@ export default function EditChallengeForm({ challenge }: EditChallengeFormProps)
       </div>
 
       <div>
-        <label htmlFor="type" className="block text-sm font-medium text-gray-700">
+        <label
+          htmlFor="type"
+          className="block text-sm font-medium text-gray-700"
+        >
           Challenge Type
         </label>
         <div className="mt-1">
@@ -108,7 +120,10 @@ export default function EditChallengeForm({ challenge }: EditChallengeFormProps)
       </div>
 
       <div>
-        <label htmlFor="opponentUsername" className="block text-sm font-medium text-gray-700">
+        <label
+          htmlFor="opponentUsername"
+          className="block text-sm font-medium text-gray-700"
+        >
           Opponent Email (Optional)
         </label>
         <div className="mt-1">
@@ -130,7 +145,7 @@ export default function EditChallengeForm({ challenge }: EditChallengeFormProps)
           disabled={isLoading}
           className="flex-1 inline-flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
         >
-          {isLoading ? 'Saving...' : 'Save Changes'}
+          {isLoading ? "Saving..." : "Save Changes"}
         </button>
         <button
           type="button"
@@ -143,4 +158,4 @@ export default function EditChallengeForm({ challenge }: EditChallengeFormProps)
       </div>
     </form>
   );
-} 
+}

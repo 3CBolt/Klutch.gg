@@ -1,15 +1,17 @@
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/app/api/auth/[...nextauth]/auth';
-import Link from 'next/link';
-import CreateClubForm from './CreateClubForm';
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/app/api/auth/[...nextauth]/auth";
+import Link from "next/link";
+import CreateClubForm from "./CreateClubForm";
 
 export default async function CreateClubPage() {
   const session = await getServerSession(authOptions);
-  
+
   if (!session?.user?.email) {
     return (
       <div className="text-center py-12">
-        <h3 className="mt-2 text-sm font-semibold text-gray-900">Please log in to create a club</h3>
+        <h3 className="mt-2 text-sm font-semibold text-gray-900">
+          Please log in to create a club
+        </h3>
         <div className="mt-6">
           <Link
             href="/api/auth/signin"
@@ -31,7 +33,8 @@ export default async function CreateClubPage() {
               Create a New Club
             </h2>
             <p className="mt-2 text-sm text-gray-500">
-              Create a club to connect with other players and organize challenges together.
+              Create a club to connect with other players and organize
+              challenges together.
             </p>
           </div>
           <div className="mt-4 flex md:ml-4 md:mt-0">
@@ -50,4 +53,4 @@ export default async function CreateClubPage() {
       </div>
     </div>
   );
-} 
+}

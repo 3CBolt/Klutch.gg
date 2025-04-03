@@ -1,11 +1,11 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import toast from 'react-hot-toast';
-import { useSocket } from '@/app/hooks/useSocket';
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import toast from "react-hot-toast";
+import { useSocket } from "@/app/hooks/useSocket";
 
-type ChallengeStatus = 'OPEN' | 'IN_PROGRESS' | 'COMPLETED' | 'DISPUTED';
+type ChallengeStatus = "OPEN" | "IN_PROGRESS" | "COMPLETED" | "DISPUTED";
 
 interface ChallengeActionsProps {
   challengeId: string;
@@ -20,11 +20,11 @@ export default function ChallengeActions({
   canEdit,
   canDelete,
   canJoin,
-  status
+  status,
 }: ChallengeActionsProps) {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
-  const [actionType, setActionType] = useState<'delete' | 'join' | null>(null);
+  const [actionType, setActionType] = useState<"delete" | "join" | null>(null);
   const { socket } = useSocket();
 
   const handleEdit = () => {
@@ -32,32 +32,38 @@ export default function ChallengeActions({
   };
 
   const handleDelete = async () => {
-    if (!confirm('Are you sure you want to delete this challenge? This action cannot be undone.')) {
+    if (
+      !confirm(
+        "Are you sure you want to delete this challenge? This action cannot be undone.",
+      )
+    ) {
       return;
     }
 
     try {
       setIsLoading(true);
-      setActionType('delete');
+      setActionType("delete");
 
       const response = await fetch(`/api/challenge/${challengeId}`, {
-        method: 'DELETE',
+        method: "DELETE",
       });
 
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || 'Failed to delete challenge');
+        throw new Error(data.error || "Failed to delete challenge");
       }
 
       // Emit challenge deletion event
-      socket?.emit('challenge:delete', { challengeId });
+      socket?.emit("challenge:delete", { challengeId });
 
-      toast.success('Challenge deleted successfully');
-      router.push('/challenges');
+      toast.success("Challenge deleted successfully");
+      router.push("/challenges");
       router.refresh();
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Failed to delete challenge');
+      toast.error(
+        err instanceof Error ? err.message : "Failed to delete challenge",
+      );
     } finally {
       setIsLoading(false);
       setActionType(null);
@@ -67,28 +73,30 @@ export default function ChallengeActions({
   const handleJoin = async () => {
     try {
       setIsLoading(true);
-      setActionType('join');
+      setActionType("join");
 
       const response = await fetch(`/api/challenge/${challengeId}/join`, {
-        method: 'POST',
+        method: "POST",
       });
 
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || 'Failed to join challenge');
+        throw new Error(data.error || "Failed to join challenge");
       }
 
       // Emit challenge join event
-      socket?.emit('challenge:join', {
+      socket?.emit("challenge:join", {
         challengeId,
         opponent: data.opponent,
       });
 
-      toast.success('Successfully joined challenge');
+      toast.success("Successfully joined challenge");
       router.refresh();
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Failed to join challenge');
+      toast.error(
+        err instanceof Error ? err.message : "Failed to join challenge",
+      );
     } finally {
       setIsLoading(false);
       setActionType(null);
@@ -113,13 +121,13 @@ export default function ChallengeActions({
           disabled={isLoading}
           className="inline-flex justify-center items-center min-h-[44px] px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          {isLoading && actionType === 'delete' ? (
+          {isLoading && actionType === "delete" ? (
             <>
               <span className="animate-spin mr-2">⌛</span>
               Deleting...
             </>
           ) : (
-            'Delete Challenge'
+            "Delete Challenge"
           )}
         </button>
       )}
@@ -130,13 +138,13 @@ export default function ChallengeActions({
           disabled={isLoading}
           className="inline-flex justify-center items-center min-h-[44px] px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          {isLoading && actionType === 'join' ? (
+          {isLoading && actionType === "join" ? (
             <>
               <span className="animate-spin mr-2">⌛</span>
               Joining...
             </>
           ) : (
-            'Join Challenge'
+            "Join Challenge"
           )}
         </button>
       )}
@@ -150,4 +158,4 @@ export default function ChallengeActions({
       </button>
     </div>
   );
-} 
+}

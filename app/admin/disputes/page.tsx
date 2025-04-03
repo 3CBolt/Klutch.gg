@@ -1,23 +1,23 @@
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/app/api/auth/[...nextauth]/auth';
-import { redirect } from 'next/navigation';
-import { prisma } from '@/lib/prisma';
-import AdminDisputeList from './AdminDisputeList';
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/app/api/auth/[...nextauth]/auth";
+import { redirect } from "next/navigation";
+import { prisma } from "@/lib/prisma";
+import AdminDisputeList from "./AdminDisputeList";
 
 export default async function AdminDisputesPage() {
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) {
-    redirect('/login');
+    redirect("/login");
   }
 
   // Check if user is admin
   const user = await prisma.user.findUnique({
     where: { id: session.user.id },
-    select: { isAdmin: true }
+    select: { isAdmin: true },
   });
 
   if (!user?.isAdmin) {
-    redirect('/');
+    redirect("/");
   }
 
   return (
@@ -26,4 +26,4 @@ export default async function AdminDisputesPage() {
       <AdminDisputeList />
     </div>
   );
-} 
+}

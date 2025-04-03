@@ -1,11 +1,16 @@
-'use client';
+"use client";
 
-import { useAuth, isAuthenticated } from '@/app/hooks/useAuth';
-import { Card, CardContent, CardHeader, CardTitle } from '@/app/components/ui/card';
-import { Button } from '@/app/components/ui/button';
-import { Skeleton } from '@/app/components/ui/skeleton';
-import { User, Settings } from 'lucide-react';
-import Link from 'next/link';
+import { useAuth, isAuthenticated } from "@/app/hooks/useAuth";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/app/components/ui/card";
+import { Button } from "@/app/components/ui/button";
+import { Skeleton } from "@/app/components/ui/skeleton";
+import { User, Settings } from "lucide-react";
+import Link from "next/link";
 
 function LoadingState() {
   return (
@@ -28,7 +33,9 @@ function UnauthenticatedState() {
         <div className="text-center space-y-4">
           <User className="h-12 w-12 text-gray-400 mx-auto" />
           <div className="space-y-2">
-            <h3 className="text-lg font-medium text-gray-900">Sign in to view your profile</h3>
+            <h3 className="text-lg font-medium text-gray-900">
+              Sign in to view your profile
+            </h3>
             <p className="text-sm text-gray-500">
               Access your profile, wallet, and game history
             </p>
@@ -70,7 +77,9 @@ export default function UserProfile() {
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div>
             <h4 className="text-sm font-medium text-gray-500">Name</h4>
-            <p className="mt-1 text-sm text-gray-900">{auth.user.name || 'Not set'}</p>
+            <p className="mt-1 text-sm text-gray-900">
+              {auth.user.name || "Not set"}
+            </p>
           </div>
           <div>
             <h4 className="text-sm font-medium text-gray-500">Email</h4>
@@ -80,9 +89,9 @@ export default function UserProfile() {
             <div>
               <h4 className="text-sm font-medium text-gray-500">Balance</h4>
               <p className="mt-1 text-sm text-gray-900">
-                {new Intl.NumberFormat('en-US', {
-                  style: 'currency',
-                  currency: 'USD',
+                {new Intl.NumberFormat("en-US", {
+                  style: "currency",
+                  currency: "USD",
                 }).format(auth.user.balance)}
               </p>
             </div>
@@ -91,4 +100,4 @@ export default function UserProfile() {
       </CardContent>
     </Card>
   );
-} 
+}

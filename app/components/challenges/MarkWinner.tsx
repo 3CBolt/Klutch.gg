@@ -1,18 +1,22 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { Challenge, ChallengeStatus, User } from '@prisma/client';
-import { useSession } from 'next-auth/react';
-import { Button } from '@/app/components/ui/button';
-import { useRouter } from 'next/navigation';
-import toast from 'react-hot-toast';
+import { useState } from "react";
+import { Challenge, ChallengeStatus, User } from "@prisma/client";
+import { useSession } from "next-auth/react";
+import { Button } from "@/app/components/ui/button";
+import { useRouter } from "next/navigation";
+import toast from "react-hot-toast";
 
 interface MarkWinnerProps {
   challenge: Challenge & {
     creator: User;
     opponent: User | null;
   };
-  onStatusChange: (newStatus: ChallengeStatus, winner?: User, disputeReason?: string) => void;
+  onStatusChange: (
+    newStatus: ChallengeStatus,
+    winner?: User,
+    disputeReason?: string,
+  ) => void;
 }
 
 export function MarkWinner({ challenge, onStatusChange }: MarkWinnerProps) {
@@ -20,7 +24,7 @@ export function MarkWinner({ challenge, onStatusChange }: MarkWinnerProps) {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showDisputeDialog, setShowDisputeDialog] = useState(false);
-  const [disputeReason, setDisputeReason] = useState('');
+  const [disputeReason, setDisputeReason] = useState("");
 
   const isCreator = session?.user?.id === challenge.creatorId;
   const isOpponent = session?.user?.id === challenge.opponentId;
@@ -29,9 +33,9 @@ export function MarkWinner({ challenge, onStatusChange }: MarkWinnerProps) {
     try {
       setIsSubmitting(true);
       const response = await fetch(`/api/challenges/mark-winner`, {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           challengeId: challenge.id,
@@ -42,16 +46,21 @@ export function MarkWinner({ challenge, onStatusChange }: MarkWinnerProps) {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || 'Failed to mark winner');
+        throw new Error(data.error || "Failed to mark winner");
       }
 
-      const winner = winnerId === challenge.creatorId ? challenge.creator : challenge.opponent || undefined;
+      const winner =
+        winnerId === challenge.creatorId
+          ? challenge.creator
+          : challenge.opponent || undefined;
       onStatusChange(ChallengeStatus.COMPLETED, winner);
-      toast.success('Winner marked successfully');
+      toast.success("Winner marked successfully");
       router.refresh();
     } catch (error) {
-      console.error('Error marking winner:', error);
-      toast.error(error instanceof Error ? error.message : 'Failed to mark winner');
+      console.error("Error marking winner:", error);
+      toast.error(
+        error instanceof Error ? error.message : "Failed to mark winner",
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -59,16 +68,16 @@ export function MarkWinner({ challenge, onStatusChange }: MarkWinnerProps) {
 
   const handleDispute = async () => {
     if (!disputeReason.trim()) {
-      toast.error('Please provide a reason for the dispute');
+      toast.error("Please provide a reason for the dispute");
       return;
     }
 
     try {
       setIsSubmitting(true);
       const response = await fetch(`/api/challenges/dispute`, {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           challengeId: challenge.id,
@@ -79,16 +88,18 @@ export function MarkWinner({ challenge, onStatusChange }: MarkWinnerProps) {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || 'Failed to submit dispute');
+        throw new Error(data.error || "Failed to submit dispute");
       }
 
       onStatusChange(ChallengeStatus.DISPUTED, undefined, disputeReason);
       setShowDisputeDialog(false);
-      toast.success('Dispute submitted successfully');
+      toast.success("Dispute submitted successfully");
       router.refresh();
     } catch (error) {
-      console.error('Error submitting dispute:', error);
-      toast.error(error instanceof Error ? error.message : 'Failed to submit dispute');
+      console.error("Error submitting dispute:", error);
+      toast.error(
+        error instanceof Error ? error.message : "Failed to submit dispute",
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -112,7 +123,7 @@ export function MarkWinner({ challenge, onStatusChange }: MarkWinnerProps) {
           {isSubmitting ? (
             <span className="h-4 w-4 animate-spin mr-2">⌛</span>
           ) : null}
-          {challenge.creator.displayName || challenge.creator.name || 'Creator'}
+          {challenge.creator.displayName || challenge.creator.name || "Creator"}
         </Button>
         <Button
           onClick={() => handleMarkWinner(challenge.opponentId!)}
@@ -122,7 +133,9 @@ export function MarkWinner({ challenge, onStatusChange }: MarkWinnerProps) {
           {isSubmitting ? (
             <span className="h-4 w-4 animate-spin mr-2">⌛</span>
           ) : null}
-          {challenge.opponent?.displayName || challenge.opponent?.name || 'Opponent'}
+          {challenge.opponent?.displayName ||
+            challenge.opponent?.name ||
+            "Opponent"}
         </Button>
       </div>
 
@@ -142,7 +155,9 @@ export function MarkWinner({ challenge, onStatusChange }: MarkWinnerProps) {
       {showDisputeDialog && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-lg p-6 max-w-md w-full space-y-4">
-            <h3 className="text-lg font-semibold text-gray-900">Submit Dispute</h3>
+            <h3 className="text-lg font-semibold text-gray-900">
+              Submit Dispute
+            </h3>
             <textarea
               value={disputeReason}
               onChange={(e) => setDisputeReason(e.target.value)}
@@ -175,4 +190,4 @@ export function MarkWinner({ challenge, onStatusChange }: MarkWinnerProps) {
       )}
     </div>
   );
-} 
+}

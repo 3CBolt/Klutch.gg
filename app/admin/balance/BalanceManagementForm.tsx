@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { toast } from 'react-hot-toast';
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { toast } from "react-hot-toast";
 
 interface User {
   id: string;
@@ -16,11 +16,13 @@ interface BalanceManagementFormProps {
   users: User[];
 }
 
-export default function BalanceManagementForm({ users }: BalanceManagementFormProps) {
+export default function BalanceManagementForm({
+  users,
+}: BalanceManagementFormProps) {
   const router = useRouter();
-  const [selectedUserId, setSelectedUserId] = useState('');
-  const [amount, setAmount] = useState('');
-  const [reason, setReason] = useState('');
+  const [selectedUserId, setSelectedUserId] = useState("");
+  const [amount, setAmount] = useState("");
+  const [reason, setReason] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -28,10 +30,10 @@ export default function BalanceManagementForm({ users }: BalanceManagementFormPr
     setIsLoading(true);
 
     try {
-      const response = await fetch('/api/admin/balance/adjust', {
-        method: 'POST',
+      const response = await fetch("/api/admin/balance/adjust", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           userId: selectedUserId,
@@ -43,13 +45,13 @@ export default function BalanceManagementForm({ users }: BalanceManagementFormPr
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || 'Failed to adjust balance');
+        throw new Error(data.error || "Failed to adjust balance");
       }
 
-      toast.success('Balance adjusted successfully');
+      toast.success("Balance adjusted successfully");
       router.refresh();
-      setAmount('');
-      setReason('');
+      setAmount("");
+      setReason("");
     } catch (error: any) {
       toast.error(error.message);
     } finally {
@@ -57,12 +59,15 @@ export default function BalanceManagementForm({ users }: BalanceManagementFormPr
     }
   };
 
-  const selectedUser = users.find(user => user.id === selectedUserId);
+  const selectedUser = users.find((user) => user.id === selectedUserId);
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       <div>
-        <label htmlFor="user" className="block text-sm font-medium text-gray-700">
+        <label
+          htmlFor="user"
+          className="block text-sm font-medium text-gray-700"
+        >
           Select User
         </label>
         <select
@@ -75,7 +80,8 @@ export default function BalanceManagementForm({ users }: BalanceManagementFormPr
           <option value="">Select a user...</option>
           {users.map((user) => (
             <option key={user.id} value={user.id}>
-              {user.displayName || user.name || user.email} (${user.balance.toFixed(2)})
+              {user.displayName || user.name || user.email} ($
+              {user.balance.toFixed(2)})
             </option>
           ))}
         </select>
@@ -91,7 +97,10 @@ export default function BalanceManagementForm({ users }: BalanceManagementFormPr
       )}
 
       <div>
-        <label htmlFor="amount" className="block text-sm font-medium text-gray-700">
+        <label
+          htmlFor="amount"
+          className="block text-sm font-medium text-gray-700"
+        >
           Amount
         </label>
         <div className="mt-1 relative rounded-md shadow-sm">
@@ -116,7 +125,10 @@ export default function BalanceManagementForm({ users }: BalanceManagementFormPr
       </div>
 
       <div>
-        <label htmlFor="reason" className="block text-sm font-medium text-gray-700">
+        <label
+          htmlFor="reason"
+          className="block text-sm font-medium text-gray-700"
+        >
           Reason
         </label>
         <textarea
@@ -137,9 +149,9 @@ export default function BalanceManagementForm({ users }: BalanceManagementFormPr
           disabled={isLoading}
           className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          {isLoading ? 'Processing...' : 'Adjust Balance'}
+          {isLoading ? "Processing..." : "Adjust Balance"}
         </button>
       </div>
     </form>
   );
-} 
+}

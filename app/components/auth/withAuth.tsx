@@ -1,11 +1,11 @@
-'use client';
+"use client";
 
-import { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { useAuth } from '@/app/hooks/useAuth';
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/app/hooks/useAuth";
 
 export function withAuth<P extends object>(
-  WrappedComponent: React.ComponentType<P>
+  WrappedComponent: React.ComponentType<P>,
 ) {
   return function ProtectedRoute(props: P) {
     const router = useRouter();
@@ -13,7 +13,7 @@ export function withAuth<P extends object>(
 
     useEffect(() => {
       if (!isLoading && !isAuthenticated) {
-        router.push('/login');
+        router.push("/login");
       }
     }, [isLoading, isAuthenticated, router]);
 
@@ -31,4 +31,4 @@ export function withAuth<P extends object>(
 
     return <WrappedComponent {...props} />;
   };
-} 
+}

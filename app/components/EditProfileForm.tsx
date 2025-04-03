@@ -1,16 +1,21 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import Link from 'next/link';
-import { toast } from 'sonner';
-import { Button } from '@/app/components/ui/button';
-import { Input } from '@/app/components/ui/input';
-import { Label } from '@/app/components/ui/label';
-import { Textarea } from '@/app/components/ui/textarea';
-import { Card, CardContent, CardHeader, CardTitle } from '@/app/components/ui/card';
-import { Loader2 } from 'lucide-react';
-import { showToast } from '@/app/lib/toast';
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { toast } from "sonner";
+import { Button } from "@/app/components/ui/button";
+import { Input } from "@/app/components/ui/input";
+import { Label } from "@/app/components/ui/label";
+import { Textarea } from "@/app/components/ui/textarea";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/app/components/ui/card";
+import { Loader2 } from "lucide-react";
+import { showToast } from "@/app/lib/toast";
 
 interface Profile {
   id: string;
@@ -36,31 +41,31 @@ export default function EditProfileForm({ profile }: EditProfileFormProps) {
 
     const formData = new FormData(event.currentTarget);
     const data = {
-      displayName: formData.get('displayName'),
-      bio: formData.get('bio'),
-      kills: Number(formData.get('kills')),
-      deaths: Number(formData.get('deaths')),
-      wins: Number(formData.get('wins')),
-      gamesPlayed: Number(formData.get('gamesPlayed')),
+      displayName: formData.get("displayName"),
+      bio: formData.get("bio"),
+      kills: Number(formData.get("kills")),
+      deaths: Number(formData.get("deaths")),
+      wins: Number(formData.get("wins")),
+      gamesPlayed: Number(formData.get("gamesPlayed")),
     };
 
     try {
-      const response = await fetch('/api/profile', {
-        method: 'PUT',
+      const response = await fetch("/api/profile", {
+        method: "PUT",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify(data),
       });
 
       if (!response.ok) {
-        throw new Error('Failed to update profile');
+        throw new Error("Failed to update profile");
       }
 
-      showToast.success('Profile updated successfully');
+      showToast.success("Profile updated successfully");
       router.refresh();
     } catch (error) {
-      showToast.error('Failed to update profile');
+      showToast.error("Failed to update profile");
     } finally {
       setIsLoading(false);
     }
@@ -74,7 +79,7 @@ export default function EditProfileForm({ profile }: EditProfileFormProps) {
           <Input
             id="displayName"
             name="displayName"
-            defaultValue={profile.displayName || ''}
+            defaultValue={profile.displayName || ""}
             required
           />
         </div>
@@ -85,7 +90,7 @@ export default function EditProfileForm({ profile }: EditProfileFormProps) {
             id="bio"
             name="bio"
             rows={3}
-            defaultValue={profile.bio || ''}
+            defaultValue={profile.bio || ""}
             required
           />
         </div>
@@ -147,11 +152,11 @@ export default function EditProfileForm({ profile }: EditProfileFormProps) {
                 Updating...
               </>
             ) : (
-              'Update Profile'
+              "Update Profile"
             )}
           </Button>
         </div>
       </form>
     </Card>
   );
-} 
+}

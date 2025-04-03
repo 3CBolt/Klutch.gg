@@ -1,13 +1,13 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import Link from 'next/link';
-import { toast } from 'sonner';
-import { ClubTimeline } from '@/app/components/clubs/ClubTimeline';
-import { Button } from '@/components/ui/button';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
-import { ArrowLeft, Calendar, Loader2, Trash2, Users } from 'lucide-react';
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { toast } from "sonner";
+import { ClubTimeline } from "@/app/components/clubs/ClubTimeline";
+import { Button } from "@/components/ui/button";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { ArrowLeft, Calendar, Loader2, Trash2, Users } from "lucide-react";
 
 interface Member {
   id: string;
@@ -29,7 +29,11 @@ interface Club {
 
 interface TimelineEvent {
   id: string;
-  type: 'MEMBER_JOINED' | 'CHALLENGE_CREATED' | 'CHALLENGE_COMPLETED' | 'MEMBER_LEFT';
+  type:
+    | "MEMBER_JOINED"
+    | "CHALLENGE_CREATED"
+    | "CHALLENGE_COMPLETED"
+    | "MEMBER_LEFT";
   userId: string;
   userEmail: string;
   userName?: string;
@@ -54,13 +58,12 @@ function LoadingState() {
 function ErrorState({ error }: { error: string }) {
   return (
     <div className="text-center py-12">
-      <h3 className="mt-2 text-sm font-semibold text-red-600">Error loading club</h3>
+      <h3 className="mt-2 text-sm font-semibold text-red-600">
+        Error loading club
+      </h3>
       <p className="mt-1 text-sm text-gray-500">{error}</p>
       <div className="mt-6">
-        <Link
-          href="/clubs"
-          className="text-indigo-600 hover:text-indigo-500"
-        >
+        <Link href="/clubs" className="text-indigo-600 hover:text-indigo-500">
           Back to Clubs
         </Link>
       </div>
@@ -77,7 +80,7 @@ function MemberList({ members }: { members: Member[] }) {
           Members
         </CardTitle>
         <p className="text-sm text-muted-foreground">
-          {members.length} member{members.length !== 1 ? 's' : ''} in this club
+          {members.length} member{members.length !== 1 ? "s" : ""} in this club
         </p>
       </CardHeader>
       <CardContent>
@@ -87,10 +90,16 @@ function MemberList({ members }: { members: Member[] }) {
               <table className="min-w-full divide-y divide-gray-200">
                 <thead>
                   <tr>
-                    <th scope="col" className="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-0">
+                    <th
+                      scope="col"
+                      className="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-0"
+                    >
                       Member
                     </th>
-                    <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
+                    <th
+                      scope="col"
+                      className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900"
+                    >
                       Role
                     </th>
                   </tr>
@@ -99,18 +108,22 @@ function MemberList({ members }: { members: Member[] }) {
                   {members.map((member) => (
                     <tr key={member.id} className="hover:bg-gray-50">
                       <td className="whitespace-nowrap py-4 pl-4 pr-3 text-sm sm:pl-0">
-                        <div className="font-medium text-gray-900">{member.name || member.email}</div>
+                        <div className="font-medium text-gray-900">
+                          {member.name || member.email}
+                        </div>
                         {member.name && (
                           <div className="text-gray-500">{member.email}</div>
                         )}
                       </td>
                       <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                        <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
-                          member.isOwner 
-                            ? 'bg-purple-100 text-purple-800'
-                            : 'bg-gray-100 text-gray-800'
-                        }`}>
-                          {member.isOwner ? 'Owner' : 'Member'}
+                        <span
+                          className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
+                            member.isOwner
+                              ? "bg-purple-100 text-purple-800"
+                              : "bg-gray-100 text-gray-800"
+                          }`}
+                        >
+                          {member.isOwner ? "Owner" : "Member"}
                         </span>
                       </td>
                     </tr>
@@ -125,20 +138,24 @@ function MemberList({ members }: { members: Member[] }) {
   );
 }
 
-export default function ClubDetails({ club, userEmail, timelineEvents }: ClubDetailsProps) {
+export default function ClubDetails({
+  club,
+  userEmail,
+  timelineEvents,
+}: ClubDetailsProps) {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
 
   const isOwner = club.owner.email === userEmail;
-  const isMember = club.members.some(member => member.email === userEmail);
+  const isMember = club.members.some((member) => member.email === userEmail);
 
   const handleJoinClub = async () => {
     setIsLoading(true);
     try {
-      const response = await fetch('/api/club/join', {
-        method: 'POST',
+      const response = await fetch("/api/club/join", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           clubId: club.id,
@@ -148,29 +165,33 @@ export default function ClubDetails({ club, userEmail, timelineEvents }: ClubDet
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || 'Failed to join club');
+        throw new Error(data.error || "Failed to join club");
       }
 
-      toast.success('Successfully joined club');
+      toast.success("Successfully joined club");
       router.refresh();
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Failed to join club');
+      toast.error(err instanceof Error ? err.message : "Failed to join club");
     } finally {
       setIsLoading(false);
     }
   };
 
   const handleDeleteClub = async () => {
-    if (!confirm('Are you sure you want to delete this club? This action cannot be undone.')) {
+    if (
+      !confirm(
+        "Are you sure you want to delete this club? This action cannot be undone.",
+      )
+    ) {
       return;
     }
 
     setIsLoading(true);
     try {
-      const response = await fetch('/api/club/delete', {
-        method: 'POST',
+      const response = await fetch("/api/club/delete", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           clubId: club.id,
@@ -180,14 +201,14 @@ export default function ClubDetails({ club, userEmail, timelineEvents }: ClubDet
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || 'Failed to delete club');
+        throw new Error(data.error || "Failed to delete club");
       }
 
-      toast.success('Successfully deleted club');
-      router.push('/clubs');
+      toast.success("Successfully deleted club");
+      router.push("/clubs");
       router.refresh();
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Failed to delete club');
+      toast.error(err instanceof Error ? err.message : "Failed to delete club");
     } finally {
       setIsLoading(false);
     }
@@ -275,4 +296,4 @@ export default function ClubDetails({ club, userEmail, timelineEvents }: ClubDet
       </div>
     </div>
   );
-} 
+}

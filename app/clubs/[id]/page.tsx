@@ -1,17 +1,19 @@
-import { getServerSession } from 'next-auth';
-import { authOptions } from '../../api/auth/[...nextauth]/auth';
-import { prisma } from '@/lib/prisma';
-import { notFound } from 'next/navigation';
-import Link from 'next/link';
-import ClubDetails from './ClubDetails';
+import { getServerSession } from "next-auth";
+import { authOptions } from "../../api/auth/[...nextauth]/auth";
+import { prisma } from "@/lib/prisma";
+import { notFound } from "next/navigation";
+import Link from "next/link";
+import ClubDetails from "./ClubDetails";
 
 export default async function ClubPage({ params }: { params: { id: string } }) {
   const session = await getServerSession(authOptions);
-  
+
   if (!session?.user?.email) {
     return (
       <div className="text-center py-12">
-        <h3 className="mt-2 text-sm font-semibold text-gray-900">Please log in to view club details</h3>
+        <h3 className="mt-2 text-sm font-semibold text-gray-900">
+          Please log in to view club details
+        </h3>
         <div className="mt-6">
           <Link
             href="/api/auth/signin"
@@ -45,7 +47,7 @@ export default async function ClubPage({ params }: { params: { id: string } }) {
       }),
       prisma.clubEvent.findMany({
         where: { clubId: params.id },
-        orderBy: { timestamp: 'desc' },
+        orderBy: { timestamp: "desc" },
         take: 50,
         include: {
           user: {
@@ -64,13 +66,13 @@ export default async function ClubPage({ params }: { params: { id: string } }) {
     }
 
     // Transform the data to include isOwner flag for members
-    const membersWithRole = club.members.map(member => ({
+    const membersWithRole = club.members.map((member) => ({
       ...member,
       isOwner: member.email === club.owner.email,
     }));
 
     // Transform events into the format expected by ClubTimeline
-    const timelineEvents = events.map(event => ({
+    const timelineEvents = events.map((event) => ({
       id: event.id,
       type: event.type,
       userId: event.userId,
@@ -85,22 +87,29 @@ export default async function ClubPage({ params }: { params: { id: string } }) {
       members: membersWithRole,
     };
 
-    return <ClubDetails club={clubData} userEmail={session.user.email} timelineEvents={timelineEvents} />;
+    return (
+      <ClubDetails
+        club={clubData}
+        userEmail={session.user.email}
+        timelineEvents={timelineEvents}
+      />
+    );
   } catch (error) {
-    console.error('Error loading club:', error);
+    console.error("Error loading club:", error);
     return (
       <div className="text-center py-12">
-        <h3 className="mt-2 text-sm font-semibold text-red-600">Error loading club</h3>
-        <p className="mt-1 text-sm text-gray-500">Failed to load club details. Please try again later.</p>
+        <h3 className="mt-2 text-sm font-semibold text-red-600">
+          Error loading club
+        </h3>
+        <p className="mt-1 text-sm text-gray-500">
+          Failed to load club details. Please try again later.
+        </p>
         <div className="mt-6">
-          <Link
-            href="/clubs"
-            className="text-indigo-600 hover:text-indigo-500"
-          >
+          <Link href="/clubs" className="text-indigo-600 hover:text-indigo-500">
             Back to Clubs
           </Link>
         </div>
       </div>
     );
   }
-} 
+}

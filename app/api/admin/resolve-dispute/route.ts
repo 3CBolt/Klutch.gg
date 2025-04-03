@@ -1,12 +1,12 @@
-import { NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/app/api/auth/[...nextauth]/auth';
-import { prisma } from '@/app/lib/prisma';
-import { ChallengeStatus } from '@prisma/client';
-import { releaseFundsToWinner } from '@/app/lib/actions/transactions';
+import { NextResponse } from "next/server";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/app/api/auth/[...nextauth]/auth";
+import { prisma } from "@/app/lib/prisma";
+import { ChallengeStatus } from "@prisma/client";
+import { releaseFundsToWinner } from "@/app/lib/actions/transactions";
 
 // List of admin emails that have access to this endpoint
-const ADMIN_EMAILS = ['test.creator@example.com']; // Replace with your admin emails
+const ADMIN_EMAILS = ["test.creator@example.com"]; // Replace with your admin emails
 
 type ResolveDisputeRequest = {
   challengeId: string;
@@ -19,7 +19,7 @@ export async function POST(request: Request) {
 
     // Check authentication and admin status
     if (!session?.user?.email || !ADMIN_EMAILS.includes(session.user.email)) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const body: ResolveDisputeRequest = await request.json();
@@ -28,8 +28,8 @@ export async function POST(request: Request) {
     // Validate required fields
     if (!challengeId || !winnerId) {
       return NextResponse.json(
-        { error: 'Missing required fields' },
-        { status: 400 }
+        { error: "Missing required fields" },
+        { status: 400 },
       );
     }
 
@@ -41,31 +41,28 @@ export async function POST(request: Request) {
         status: true,
         creatorId: true,
         opponentId: true,
-        lockedFunds: true
-      }
+        lockedFunds: true,
+      },
     });
 
     if (!challenge) {
       return NextResponse.json(
-        { error: 'Challenge not found' },
-        { status: 404 }
+        { error: "Challenge not found" },
+        { status: 404 },
       );
     }
 
     // Verify challenge is disputed
     if (challenge.status !== ChallengeStatus.DISPUTED) {
       return NextResponse.json(
-        { error: 'Challenge is not disputed' },
-        { status: 400 }
+        { error: "Challenge is not disputed" },
+        { status: 400 },
       );
     }
 
     // Verify winner is either creator or opponent
     if (winnerId !== challenge.creatorId && winnerId !== challenge.opponentId) {
-      return NextResponse.json(
-        { error: 'Invalid winner ID' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "Invalid winner ID" }, { status: 400 });
     }
 
     // Update challenge and release funds in a transaction
@@ -75,8 +72,8 @@ export async function POST(request: Request) {
         where: { id: challengeId },
         data: {
           status: ChallengeStatus.COMPLETED,
-          winnerId: winnerId
-        }
+          winnerId: winnerId,
+        },
       });
 
       // Release funds to winner
@@ -87,10 +84,10 @@ export async function POST(request: Request) {
 
     return NextResponse.json(updatedChallenge);
   } catch (error) {
-    console.error('Error resolving dispute:', error);
+    console.error("Error resolving dispute:", error);
     return NextResponse.json(
-      { error: 'Failed to resolve dispute' },
-      { status: 500 }
+      { error: "Failed to resolve dispute" },
+      { status: 500 },
     );
   }
-} 
+}

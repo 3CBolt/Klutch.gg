@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { DisputeStatus } from '@prisma/client';
+import { useState, useEffect } from "react";
+import { DisputeStatus } from "@prisma/client";
 
 interface User {
   id: string;
@@ -39,14 +39,14 @@ export default function AdminDisputeList() {
 
   const fetchDisputes = async () => {
     try {
-      const response = await fetch('/api/admin/disputes');
+      const response = await fetch("/api/admin/disputes");
       if (!response.ok) {
-        throw new Error('Failed to fetch disputes');
+        throw new Error("Failed to fetch disputes");
       }
       const data = await response.json();
       setDisputes(data);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred');
+      setError(err instanceof Error ? err.message : "An error occurred");
     } finally {
       setLoading(false);
     }
@@ -54,22 +54,24 @@ export default function AdminDisputeList() {
 
   const resolveDispute = async (disputeId: string, winnerId: string | null) => {
     try {
-      const response = await fetch('/api/admin/disputes', {
-        method: 'POST',
+      const response = await fetch("/api/admin/disputes", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({ disputeId, winnerId }),
       });
 
       if (!response.ok) {
-        throw new Error('Failed to resolve dispute');
+        throw new Error("Failed to resolve dispute");
       }
 
       // Refresh disputes list
       await fetchDisputes();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to resolve dispute');
+      setError(
+        err instanceof Error ? err.message : "Failed to resolve dispute",
+      );
     }
   };
 
@@ -104,8 +106,8 @@ export default function AdminDisputeList() {
             <span
               className={`px-3 py-1 rounded-full text-sm ${
                 dispute.status === DisputeStatus.PENDING
-                  ? 'bg-yellow-100 text-yellow-800'
-                  : 'bg-green-100 text-green-800'
+                  ? "bg-yellow-100 text-yellow-800"
+                  : "bg-green-100 text-green-800"
               }`}
             >
               {dispute.status}
@@ -115,12 +117,24 @@ export default function AdminDisputeList() {
           <div className="mb-4">
             <h4 className="font-medium mb-2">Challenge Details:</h4>
             <p>Stake: ${dispute.challenge.stake}</p>
-            <p>Creator: {dispute.challenge.creator.displayName || dispute.challenge.creator.name}</p>
+            <p>
+              Creator:{" "}
+              {dispute.challenge.creator.displayName ||
+                dispute.challenge.creator.name}
+            </p>
             {dispute.challenge.opponent && (
-              <p>Opponent: {dispute.challenge.opponent.displayName || dispute.challenge.opponent.name}</p>
+              <p>
+                Opponent:{" "}
+                {dispute.challenge.opponent.displayName ||
+                  dispute.challenge.opponent.name}
+              </p>
             )}
             {dispute.challenge.winner && (
-              <p>Current Winner: {dispute.challenge.winner.displayName || dispute.challenge.winner.name}</p>
+              <p>
+                Current Winner:{" "}
+                {dispute.challenge.winner.displayName ||
+                  dispute.challenge.winner.name}
+              </p>
             )}
           </div>
 
@@ -134,14 +148,18 @@ export default function AdminDisputeList() {
               <h4 className="font-medium mb-2">Resolve Dispute:</h4>
               <div className="flex gap-3">
                 <button
-                  onClick={() => resolveDispute(dispute.id, dispute.challenge.creator.id)}
+                  onClick={() =>
+                    resolveDispute(dispute.id, dispute.challenge.creator.id)
+                  }
                   className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition"
                 >
                   Creator Wins
                 </button>
                 {dispute.challenge.opponent && (
                   <button
-                    onClick={() => resolveDispute(dispute.id, dispute.challenge.opponent.id)}
+                    onClick={() =>
+                      resolveDispute(dispute.id, dispute.challenge.opponent.id)
+                    }
                     className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition"
                   >
                     Opponent Wins
@@ -160,4 +178,4 @@ export default function AdminDisputeList() {
       ))}
     </div>
   );
-} 
+}

@@ -1,10 +1,10 @@
-'use client';
+"use client";
 
-import { usePathname } from 'next/navigation';
-import Link from 'next/link';
-import { useSession } from 'next-auth/react';
-import LogoutButton from './auth/LogoutButton';
-import { useState, useEffect } from 'react';
+import { usePathname } from "next/navigation";
+import Link from "next/link";
+import { useSession } from "next-auth/react";
+import LogoutButton from "./auth/LogoutButton";
+import { useState, useEffect } from "react";
 
 export default function Navigation() {
   const pathname = usePathname();
@@ -21,13 +21,13 @@ export default function Navigation() {
 
   const fetchBalance = async () => {
     try {
-      const response = await fetch('/api/wallet/balance');
+      const response = await fetch("/api/wallet/balance");
       if (response.ok) {
         const data = await response.json();
         setBalance(data.balance);
       }
     } catch (error) {
-      console.error('Error fetching balance:', error);
+      console.error("Error fetching balance:", error);
     }
   };
 
@@ -40,27 +40,31 @@ export default function Navigation() {
           setIsAdmin(userData.isAdmin || false);
         }
       } catch (error) {
-        console.error('Error checking admin status:', error);
+        console.error("Error checking admin status:", error);
       }
     }
   };
 
   const links = [
-    { href: '/', label: 'Home' },
-    { href: '/challenges', label: 'Challenges' },
-    { href: '/challenges/history', label: 'Challenge History' },
-    { href: '/clubs', label: 'Clubs' },
-    { href: '/wallet', label: 'Wallet' },
-    ...(session?.user ? [
-      { href: `/profile/${session.user.id}`, label: 'Profile' },
-      ...(isAdmin ? [
-        { href: '/admin/disputes', label: 'Admin Disputes' },
-        { href: '/admin/balance', label: 'Balance Management' },
-      ] : []),
-    ] : [
-      { href: '/login', label: 'Login' },
-      { href: '/register', label: 'Register' },
-    ]),
+    { href: "/", label: "Home" },
+    { href: "/challenges", label: "Challenges" },
+    { href: "/challenges/history", label: "Challenge History" },
+    { href: "/clubs", label: "Clubs" },
+    { href: "/wallet", label: "Wallet" },
+    ...(session?.user
+      ? [
+          { href: `/profile/${session.user.id}`, label: "Profile" },
+          ...(isAdmin
+            ? [
+                { href: "/admin/disputes", label: "Admin Disputes" },
+                { href: "/admin/balance", label: "Balance Management" },
+              ]
+            : []),
+        ]
+      : [
+          { href: "/login", label: "Login" },
+          { href: "/register", label: "Register" },
+        ]),
   ];
 
   return (
@@ -83,8 +87,8 @@ export default function Navigation() {
                       href={item.href}
                       className={`${
                         isActive
-                          ? 'bg-gray-900 text-white'
-                          : 'text-gray-300 hover:bg-gray-700 hover:text-white'
+                          ? "bg-gray-900 text-white"
+                          : "text-gray-300 hover:bg-gray-700 hover:text-white"
                       } rounded-md px-3 py-2 text-sm font-medium`}
                     >
                       {item.label}
@@ -96,7 +100,7 @@ export default function Navigation() {
           </div>
           <div className="hidden md:block">
             <div className="ml-4 flex items-center md:ml-6">
-              {status === 'loading' ? (
+              {status === "loading" ? (
                 <div className="animate-pulse bg-gray-700 rounded-md px-3 py-2 w-20"></div>
               ) : session ? (
                 <div className="flex items-center space-x-4">
@@ -145,8 +149,8 @@ export default function Navigation() {
                 href={item.href}
                 className={`${
                   isActive
-                    ? 'bg-gray-900 text-white'
-                    : 'text-gray-300 hover:bg-gray-700 hover:text-white'
+                    ? "bg-gray-900 text-white"
+                    : "text-gray-300 hover:bg-gray-700 hover:text-white"
                 } block rounded-md px-3 py-2 text-base font-medium`}
               >
                 {item.label}
@@ -161,7 +165,7 @@ export default function Navigation() {
               Balance: ${balance.toFixed(2)}
             </Link>
           )}
-          {status === 'loading' ? (
+          {status === "loading" ? (
             <div className="animate-pulse bg-gray-700 rounded-md px-3 py-2 w-20 my-2"></div>
           ) : !session ? (
             <>
@@ -185,4 +189,4 @@ export default function Navigation() {
       </div>
     </nav>
   );
-} 
+}

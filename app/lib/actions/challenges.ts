@@ -1,5 +1,5 @@
-import { prisma } from '../prisma';
-import { Challenge, ChallengeStatus } from '@prisma/client';
+import { prisma } from "../prisma";
+import { Challenge, ChallengeStatus } from "@prisma/client";
 
 export type ChallengeWithRelations = Challenge & {
   creator: {
@@ -20,36 +20,36 @@ export async function getOpenChallenges(): Promise<ChallengeWithRelations[]> {
   try {
     const challenges = await prisma.challenge.findMany({
       where: {
-        status: ChallengeStatus.OPEN
+        status: ChallengeStatus.OPEN,
       },
       include: {
         creator: {
           select: {
             name: true,
-            email: true
-          }
+            email: true,
+          },
         },
         opponent: {
           select: {
             name: true,
-            email: true
-          }
+            email: true,
+          },
         },
         winner: {
           select: {
             name: true,
-            email: true
-          }
-        }
+            email: true,
+          },
+        },
       },
       orderBy: {
-        createdAt: 'desc'
-      }
+        createdAt: "desc",
+      },
     });
 
     return challenges || [];
   } catch (error) {
-    console.error('Error fetching open challenges:', error);
+    console.error("Error fetching open challenges:", error);
     return [];
   }
 }
@@ -59,8 +59,8 @@ export async function getAllChallenges(): Promise<ChallengeWithRelations[]> {
     const challenges = await prisma.challenge.findMany({
       where: {
         status: {
-          in: [ChallengeStatus.OPEN, ChallengeStatus.IN_PROGRESS]
-        }
+          in: [ChallengeStatus.OPEN, ChallengeStatus.IN_PROGRESS],
+        },
       },
       include: {
         creator: {
@@ -68,85 +68,86 @@ export async function getAllChallenges(): Promise<ChallengeWithRelations[]> {
             id: true,
             name: true,
             email: true,
-            displayName: true
-          }
+            displayName: true,
+          },
         },
         opponent: {
           select: {
             id: true,
             name: true,
             email: true,
-            displayName: true
-          }
+            displayName: true,
+          },
         },
         winner: {
           select: {
             id: true,
             name: true,
             email: true,
-            displayName: true
-          }
-        }
+            displayName: true,
+          },
+        },
       },
       orderBy: {
-        createdAt: 'desc'
-      }
+        createdAt: "desc",
+      },
     });
 
     return challenges || [];
   } catch (error) {
-    console.error('Error fetching all challenges:', error);
+    console.error("Error fetching all challenges:", error);
     return [];
   }
 }
 
-export async function getUserChallenges(userId: string): Promise<ChallengeWithRelations[]> {
+export async function getUserChallenges(
+  userId: string,
+): Promise<ChallengeWithRelations[]> {
   try {
     const challenges = await prisma.challenge.findMany({
       where: {
-        OR: [
-          { creatorId: userId },
-          { opponentId: userId }
-        ]
+        OR: [{ creatorId: userId }, { opponentId: userId }],
       },
       include: {
         creator: {
           select: {
             name: true,
-            email: true
-          }
+            email: true,
+          },
         },
         opponent: {
           select: {
             name: true,
-            email: true
-          }
+            email: true,
+          },
         },
         winner: {
           select: {
             name: true,
-            email: true
-          }
-        }
+            email: true,
+          },
+        },
       },
       orderBy: {
-        createdAt: 'desc'
-      }
+        createdAt: "desc",
+      },
     });
 
     return challenges || [];
   } catch (error) {
-    console.error('Error fetching user challenges:', error);
+    console.error("Error fetching user challenges:", error);
     return [];
   }
 }
 
-export async function getChallengeHistory(statusFilter?: ChallengeStatus): Promise<ChallengeWithRelations[]> {
+export async function getChallengeHistory(
+  statusFilter?: ChallengeStatus,
+): Promise<ChallengeWithRelations[]> {
   try {
     const where = {
       status: statusFilter || {
-        in: [ChallengeStatus.COMPLETED, ChallengeStatus.DISPUTED]
-      }
+        in: [ChallengeStatus.COMPLETED, ChallengeStatus.DISPUTED],
+      },
     };
 
     const challenges = await prisma.challenge.findMany({
@@ -157,34 +158,34 @@ export async function getChallengeHistory(statusFilter?: ChallengeStatus): Promi
             id: true,
             name: true,
             email: true,
-            displayName: true
-          }
+            displayName: true,
+          },
         },
         opponent: {
           select: {
             id: true,
             name: true,
             email: true,
-            displayName: true
-          }
+            displayName: true,
+          },
         },
         winner: {
           select: {
             id: true,
             name: true,
             email: true,
-            displayName: true
-          }
-        }
+            displayName: true,
+          },
+        },
       },
       orderBy: {
-        updatedAt: 'desc'
-      }
+        updatedAt: "desc",
+      },
     });
 
     return challenges;
   } catch (error) {
-    console.error('Error fetching challenge history:', error);
+    console.error("Error fetching challenge history:", error);
     return [];
   }
-} 
+}

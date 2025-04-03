@@ -1,10 +1,10 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import Link from 'next/link';
-import { usePathname } from 'next/navigation';
-import { useAuth } from '@/app/hooks/useAuth';
-import LogoutButton from '../auth/LogoutButton';
+import { useState } from "react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { useAuth } from "@/app/hooks/useAuth";
+import LogoutButton from "../auth/LogoutButton";
 
 export default function Navbar() {
   const pathname = usePathname();
@@ -24,15 +24,15 @@ export default function Navbar() {
                 Klutch.gg
               </Link>
             </div>
-            
+
             {/* Desktop Navigation */}
             <div className="hidden sm:ml-6 sm:flex sm:space-x-8">
               <Link
                 href="/"
                 className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${
-                  isActivePath('/')
-                    ? 'border-indigo-500 text-gray-900'
-                    : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
+                  isActivePath("/")
+                    ? "border-indigo-500 text-gray-900"
+                    : "border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700"
                 }`}
               >
                 Home
@@ -40,9 +40,9 @@ export default function Navbar() {
               <Link
                 href="/challenges"
                 className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${
-                  isActivePath('/challenges')
-                    ? 'border-indigo-500 text-gray-900'
-                    : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
+                  isActivePath("/challenges")
+                    ? "border-indigo-500 text-gray-900"
+                    : "border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700"
                 }`}
               >
                 Challenges
@@ -50,9 +50,9 @@ export default function Navbar() {
               <Link
                 href="/clubs"
                 className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${
-                  isActivePath('/clubs')
-                    ? 'border-indigo-500 text-gray-900'
-                    : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
+                  isActivePath("/clubs")
+                    ? "border-indigo-500 text-gray-900"
+                    : "border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700"
                 }`}
               >
                 Clubs
@@ -69,18 +69,27 @@ export default function Navbar() {
                 <Link
                   href="/wallet"
                   className={`flex items-center px-3 py-2 rounded-md text-sm font-medium ${
-                    isActivePath('/wallet')
-                      ? 'bg-gray-100 text-gray-900'
-                      : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
+                    isActivePath("/wallet")
+                      ? "bg-gray-100 text-gray-900"
+                      : "text-gray-500 hover:text-gray-700 hover:bg-gray-50"
                   }`}
                 >
                   <span className="mr-2">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="h-5 w-5"
+                      viewBox="0 0 20 20"
+                      fill="currentColor"
+                    >
                       <path d="M4 4a2 2 0 00-2 2v1h16V6a2 2 0 00-2-2H4z" />
-                      <path fillRule="evenodd" d="M18 9H2v5a2 2 0 002 2h12a2 2 0 002-2V9zM4 13a1 1 0 011-1h1a1 1 0 110 2H5a1 1 0 01-1-1zm5-1a1 1 0 100 2h1a1 1 0 100-2H9z" clipRule="evenodd" />
+                      <path
+                        fillRule="evenodd"
+                        d="M18 9H2v5a2 2 0 002 2h12a2 2 0 002-2V9zM4 13a1 1 0 011-1h1a1 1 0 110 2H5a1 1 0 01-1-1zm5-1a1 1 0 100 2h1a1 1 0 100-2H9z"
+                        clipRule="evenodd"
+                      />
                     </svg>
                   </span>
-                  <span>${user?.balance?.toFixed(2) || '0.00'}</span>
+                  <span>${user?.balance?.toFixed(2) || "0.00"}</span>
                 </Link>
                 <LogoutButton />
               </div>
@@ -112,7 +121,7 @@ export default function Navbar() {
               <span className="sr-only">Open main menu</span>
               {/* Icon when menu is closed */}
               <svg
-                className={`${isMobileMenuOpen ? 'hidden' : 'block'} h-6 w-6`}
+                className={`${isMobileMenuOpen ? "hidden" : "block"} h-6 w-6`}
                 xmlns="http://www.w3.org/2000/svg"
                 fill="none"
                 viewBox="0 0 24 24"
@@ -127,7 +136,7 @@ export default function Navbar() {
               </svg>
               {/* Icon when menu is open */}
               <svg
-                className={`${isMobileMenuOpen ? 'block' : 'hidden'} h-6 w-6`}
+                className={`${isMobileMenuOpen ? "block" : "hidden"} h-6 w-6`}
                 xmlns="http://www.w3.org/2000/svg"
                 fill="none"
                 viewBox="0 0 24 24"
@@ -146,14 +155,14 @@ export default function Navbar() {
       </div>
 
       {/* Mobile menu */}
-      <div className={`${isMobileMenuOpen ? 'block' : 'hidden'} sm:hidden`}>
+      <div className={`${isMobileMenuOpen ? "block" : "hidden"} sm:hidden`}>
         <div className="pt-2 pb-3 space-y-1">
           <Link
             href="/"
             className={`block pl-3 pr-4 py-2 border-l-4 text-base font-medium ${
-              isActivePath('/')
-                ? 'border-indigo-500 text-indigo-700 bg-indigo-50'
-                : 'border-transparent text-gray-500 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-700'
+              isActivePath("/")
+                ? "border-indigo-500 text-indigo-700 bg-indigo-50"
+                : "border-transparent text-gray-500 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-700"
             }`}
           >
             Home
@@ -161,9 +170,9 @@ export default function Navbar() {
           <Link
             href="/challenges"
             className={`block pl-3 pr-4 py-2 border-l-4 text-base font-medium ${
-              isActivePath('/challenges')
-                ? 'border-indigo-500 text-indigo-700 bg-indigo-50'
-                : 'border-transparent text-gray-500 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-700'
+              isActivePath("/challenges")
+                ? "border-indigo-500 text-indigo-700 bg-indigo-50"
+                : "border-transparent text-gray-500 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-700"
             }`}
           >
             Challenges
@@ -171,9 +180,9 @@ export default function Navbar() {
           <Link
             href="/clubs"
             className={`block pl-3 pr-4 py-2 border-l-4 text-base font-medium ${
-              isActivePath('/clubs')
-                ? 'border-indigo-500 text-indigo-700 bg-indigo-50'
-                : 'border-transparent text-gray-500 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-700'
+              isActivePath("/clubs")
+                ? "border-indigo-500 text-indigo-700 bg-indigo-50"
+                : "border-transparent text-gray-500 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-700"
             }`}
           >
             Clubs
@@ -182,17 +191,26 @@ export default function Navbar() {
             <Link
               href="/wallet"
               className={`block pl-3 pr-4 py-2 border-l-4 text-base font-medium ${
-                isActivePath('/wallet')
-                  ? 'border-indigo-500 text-indigo-700 bg-indigo-50'
-                  : 'border-transparent text-gray-500 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-700'
+                isActivePath("/wallet")
+                  ? "border-indigo-500 text-indigo-700 bg-indigo-50"
+                  : "border-transparent text-gray-500 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-700"
               }`}
             >
               <div className="flex items-center">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-5 w-5 mr-2"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                >
                   <path d="M4 4a2 2 0 00-2 2v1h16V6a2 2 0 00-2-2H4z" />
-                  <path fillRule="evenodd" d="M18 9H2v5a2 2 0 002 2h12a2 2 0 002-2V9zM4 13a1 1 0 011-1h1a1 1 0 110 2H5a1 1 0 01-1-1zm5-1a1 1 0 100 2h1a1 1 0 100-2H9z" clipRule="evenodd" />
+                  <path
+                    fillRule="evenodd"
+                    d="M18 9H2v5a2 2 0 002 2h12a2 2 0 002-2V9zM4 13a1 1 0 011-1h1a1 1 0 110 2H5a1 1 0 01-1-1zm5-1a1 1 0 100 2h1a1 1 0 100-2H9z"
+                    clipRule="evenodd"
+                  />
                 </svg>
-                <span>Wallet (${user?.balance?.toFixed(2) || '0.00'})</span>
+                <span>Wallet (${user?.balance?.toFixed(2) || "0.00"})</span>
               </div>
             </Link>
           )}
@@ -212,11 +230,9 @@ export default function Navbar() {
               </Link>
             </>
           )}
-          {isAuthenticated && (
-            <LogoutButton variant="mobile" />
-          )}
+          {isAuthenticated && <LogoutButton variant="mobile" />}
         </div>
       </div>
     </nav>
   );
-} 
+}

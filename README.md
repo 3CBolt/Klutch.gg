@@ -67,6 +67,33 @@ A skill-based competitive wagering platform focused on Call of Duty (Warzone and
 - Consolidated notification system
 - Standardized API response handling
 
+### Security Updates (March 2024)
+- Updated Next.js to version 14.2.26 to address critical security vulnerabilities:
+  - Fixed Server-Side Request Forgery in Server Actions
+  - Fixed Cache Poisoning vulnerability
+  - Fixed Denial of Service in image optimization
+  - Fixed Authorization bypass vulnerabilities
+  - Fixed DoS vulnerability with Server Actions
+  - Fixed Authorization Bypass in Middleware
+
+### API Routes Enhancement
+- Implemented new error handling system across API routes:
+  - Added structured error handling with custom error types
+  - Improved validation using Zod schemas
+  - Enhanced error messages and status codes
+  - Added context-aware error logging
+- Updated API routes with improved validation:
+  - Wallet routes (balance, deposit, verify-session)
+  - Challenge routes (create, join, submit-result, confirm-result)
+  - Authentication routes
+
+### Dependency Updates
+- Added and updated critical dependencies:
+  - @babel/runtime and @babel/runtime-corejs3 for improved runtime support
+  - @tailwindcss/forms for enhanced form styling
+  - @auth/prisma-adapter for improved authentication
+  - bcryptjs for secure password handling
+
 ## Tech Stack
 
 - Next.js 14 (frontend + API routes)

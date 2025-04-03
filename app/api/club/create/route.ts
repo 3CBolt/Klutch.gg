@@ -1,8 +1,8 @@
-import { NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/app/api/auth/[...nextauth]/auth';
-import { prisma } from '@/lib/prisma';
-import { z } from 'zod';
+import { NextResponse } from "next/server";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/app/api/auth/[...nextauth]/auth";
+import { prisma } from "@/lib/prisma";
+import { z } from "zod";
 
 // Input validation schema
 const createClubSchema = z.object({
@@ -13,11 +13,11 @@ const createClubSchema = z.object({
 export async function POST(request: Request) {
   try {
     const session = await getServerSession(authOptions);
-    
+
     if (!session?.user?.id) {
       return NextResponse.json(
-        { error: 'You must be logged in to create a club' },
-        { status: 401 }
+        { error: "You must be logged in to create a club" },
+        { status: 401 },
       );
     }
 
@@ -26,8 +26,8 @@ export async function POST(request: Request) {
 
     if (!result.success) {
       return NextResponse.json(
-        { error: 'Invalid request body', details: result.error.errors },
-        { status: 400 }
+        { error: "Invalid request body", details: result.error.errors },
+        { status: 400 },
       );
     }
 
@@ -38,15 +38,15 @@ export async function POST(request: Request) {
       where: {
         name: {
           equals: name,
-          mode: 'insensitive',
+          mode: "insensitive",
         },
       },
     });
 
     if (existingClub) {
       return NextResponse.json(
-        { error: 'A club with this name already exists' },
-        { status: 400 }
+        { error: "A club with this name already exists" },
+        { status: 400 },
       );
     }
 
@@ -80,10 +80,10 @@ export async function POST(request: Request) {
 
     return NextResponse.json(club);
   } catch (error) {
-    console.error('Error creating club:', error);
+    console.error("Error creating club:", error);
     return NextResponse.json(
-      { error: 'Failed to create club' },
-      { status: 500 }
+      { error: "Failed to create club" },
+      { status: 500 },
     );
   }
-} 
+}

@@ -1,7 +1,7 @@
-import { NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/app/api/auth/[...nextauth]/auth';
-import { prisma } from '@/app/lib/prisma';
+import { NextResponse } from "next/server";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/app/api/auth/[...nextauth]/auth";
+import { prisma } from "@/app/lib/prisma";
 
 export async function POST(request: Request) {
   try {
@@ -9,8 +9,8 @@ export async function POST(request: Request) {
     const session = await getServerSession(authOptions);
     if (!session?.user?.isAdmin) {
       return NextResponse.json(
-        { error: 'Unauthorized - Admin access required' },
-        { status: 401 }
+        { error: "Unauthorized - Admin access required" },
+        { status: 401 },
       );
     }
 
@@ -20,16 +20,19 @@ export async function POST(request: Request) {
     // Validate required fields
     if (!userId || amount === undefined || !reason) {
       return NextResponse.json(
-        { error: 'Missing required fields: userId, amount, and reason are required' },
-        { status: 400 }
+        {
+          error:
+            "Missing required fields: userId, amount, and reason are required",
+        },
+        { status: 400 },
       );
     }
 
     // Validate amount is a number
-    if (typeof amount !== 'number' || isNaN(amount)) {
+    if (typeof amount !== "number" || isNaN(amount)) {
       return NextResponse.json(
-        { error: 'Amount must be a valid number' },
-        { status: 400 }
+        { error: "Amount must be a valid number" },
+        { status: 400 },
       );
     }
 
@@ -39,10 +42,7 @@ export async function POST(request: Request) {
     });
 
     if (!user) {
-      return NextResponse.json(
-        { error: 'User not found' },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
     // Calculate new balance
@@ -51,8 +51,8 @@ export async function POST(request: Request) {
     // Prevent negative balance
     if (newBalance < 0) {
       return NextResponse.json(
-        { error: 'Cannot set balance below zero' },
-        { status: 400 }
+        { error: "Cannot set balance below zero" },
+        { status: 400 },
       );
     }
 
@@ -71,7 +71,7 @@ export async function POST(request: Request) {
         data: {
           userId,
           amount,
-          type: amount > 0 ? 'DEPOSIT' : 'CHALLENGE_REFUND',
+          type: amount > 0 ? "DEPOSIT" : "CHALLENGE_REFUND",
           description: `Admin adjustment: ${reason}`,
           metadata: {
             adjustedBy: session.user.id,
@@ -86,13 +86,13 @@ export async function POST(request: Request) {
     return NextResponse.json({
       success: true,
       user: result,
-      message: 'Balance adjusted successfully',
+      message: "Balance adjusted successfully",
     });
   } catch (error) {
-    console.error('Failed to adjust balance:', error);
+    console.error("Failed to adjust balance:", error);
     return NextResponse.json(
-      { error: 'Failed to adjust balance' },
-      { status: 500 }
+      { error: "Failed to adjust balance" },
+      { status: 500 },
     );
   }
-} 
+}

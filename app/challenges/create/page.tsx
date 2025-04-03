@@ -1,15 +1,15 @@
-import { redirect } from 'next/navigation';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/app/api/auth/[...nextauth]/auth';
-import { prisma } from '@/app/lib/prisma';
-import { ChallengeType, ChallengeStatus } from '@prisma/client';
-import CreateChallengeForm from './CreateChallengeForm';
+import { redirect } from "next/navigation";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/app/api/auth/[...nextauth]/auth";
+import { prisma } from "@/app/lib/prisma";
+import { ChallengeType, ChallengeStatus } from "@prisma/client";
+import CreateChallengeForm from "./CreateChallengeForm";
 
 export default async function CreateChallengePage() {
   const session = await getServerSession(authOptions);
 
   if (!session?.user?.id) {
-    redirect('/login');
+    redirect("/login");
   }
 
   return (
@@ -24,4 +24,4 @@ export default async function CreateChallengePage() {
       </div>
     </div>
   );
-} 
+}

@@ -1,28 +1,28 @@
-'use client';
+"use client";
 
-import { signOut } from 'next-auth/react';
-import { useRouter } from 'next/navigation';
+import { signOut } from "next-auth/react";
+import { useRouter } from "next/navigation";
 
 export default function LogoutButton() {
   const router = useRouter();
 
   const handleSignOut = async () => {
     try {
-      await signOut({ 
+      await signOut({
         redirect: false,
-        callbackUrl: '/'
+        callbackUrl: "/",
       });
-      
+
       // Clear any local storage or other client-side data here if needed
       localStorage.clear();
       sessionStorage.clear();
-      
+
       // Force a hard reload to clear all state
-      window.location.href = '/';
+      window.location.href = "/";
     } catch (error) {
-      console.error('Error signing out:', error);
+      console.error("Error signing out:", error);
       // Fallback to basic redirect if something goes wrong
-      router.push('/');
+      router.push("/");
     }
   };
 
@@ -34,4 +34,4 @@ export default function LogoutButton() {
       Sign Out
     </button>
   );
-} 
+}

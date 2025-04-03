@@ -1,11 +1,11 @@
-import { NextAuthOptions } from 'next-auth';
-import CredentialsProvider from 'next-auth/providers/credentials';
-import GitHubProvider from 'next-auth/providers/github';
-import { PrismaAdapter } from '@auth/prisma-adapter';
-import { compare } from 'bcryptjs';
-import { prisma } from '@/app/lib/prisma';
+import { NextAuthOptions } from "next-auth";
+import CredentialsProvider from "next-auth/providers/credentials";
+import GitHubProvider from "next-auth/providers/github";
+import { PrismaAdapter } from "@auth/prisma-adapter";
+import { compare } from "bcryptjs";
+import { prisma } from "@/app/lib/prisma";
 
-declare module 'next-auth' {
+declare module "next-auth" {
   interface Session {
     user: {
       id: string;
@@ -14,11 +14,11 @@ declare module 'next-auth' {
       image?: string | null;
       balance?: number;
       isAdmin?: boolean;
-    }
+    };
   }
 }
 
-declare module 'next-auth/jwt' {
+declare module "next-auth/jwt" {
   interface JWT {
     id: string;
     isAdmin?: boolean;
@@ -28,18 +28,18 @@ declare module 'next-auth/jwt' {
 export const authOptions: NextAuthOptions = {
   adapter: PrismaAdapter(prisma),
   session: {
-    strategy: 'jwt'
+    strategy: "jwt",
   },
   providers: [
     GitHubProvider({
-      clientId: process.env.GITHUB_ID || '',
-      clientSecret: process.env.GITHUB_SECRET || '',
+      clientId: process.env.GITHUB_ID || "",
+      clientSecret: process.env.GITHUB_SECRET || "",
     }),
     CredentialsProvider({
-      name: 'Credentials',
+      name: "Credentials",
       credentials: {
         email: { label: "Email", type: "email" },
-        password: { label: "Password", type: "password" }
+        password: { label: "Password", type: "password" },
       },
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) {
@@ -48,7 +48,7 @@ export const authOptions: NextAuthOptions = {
 
         const user = await prisma.user.findUnique({
           where: {
-            email: credentials.email
+            email: credentials.email,
           },
           select: {
             id: true,
@@ -56,7 +56,7 @@ export const authOptions: NextAuthOptions = {
             name: true,
             password: true,
             isAdmin: true,
-          }
+          },
         });
 
         if (!user || !user.password) {
@@ -75,8 +75,8 @@ export const authOptions: NextAuthOptions = {
           name: user.name,
           isAdmin: user.isAdmin,
         };
-      }
-    })
+      },
+    }),
   ],
   callbacks: {
     async jwt({ token, user }) {
@@ -92,21 +92,21 @@ export const authOptions: NextAuthOptions = {
         session.user.isAdmin = token.isAdmin;
       }
       return session;
-    }
+    },
   },
   pages: {
-    signIn: '/login',
+    signIn: "/login",
   },
-  useSecureCookies: process.env.NODE_ENV === 'production',
+  useSecureCookies: process.env.NODE_ENV === "production",
   cookies: {
     sessionToken: {
-      name: `${process.env.NODE_ENV === 'production' ? '__Secure-' : ''}next-auth.session-token`,
+      name: `${process.env.NODE_ENV === "production" ? "__Secure-" : ""}next-auth.session-token`,
       options: {
         httpOnly: true,
-        sameSite: 'lax',
-        path: '/',
-        secure: process.env.NODE_ENV === 'production'
-      }
-    }
-  }
-}; 
+        sameSite: "lax",
+        path: "/",
+        secure: process.env.NODE_ENV === "production",
+      },
+    },
+  },
+};

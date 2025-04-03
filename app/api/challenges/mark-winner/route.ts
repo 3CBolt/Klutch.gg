@@ -1,202 +1,145 @@
-import { NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/app/api/auth/[...nextauth]/auth';
-import { prisma } from '@/lib/prisma';
-import { ChallengeStatus, ClubEventType } from '@prisma/client';
-import { initSocket } from '@/app/lib/socket';
+import { NextResponse } from "next/server";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/app/api/auth/[...nextauth]/auth";
+import { prisma } from "@/lib/prisma";
+import { handleError, Errors } from "@/lib/errors";
+import { z } from "zod";
+import { ChallengeStatus, ClubEventType } from "@prisma/client";
+import { emitToRoom } from "@/lib/server";
+
+const MarkWinnerSchema = z.object({
+  challengeId: z.string(),
+  winnerId: z.string(),
+  notes: z.string().optional(),
+  screenshotUrl: z.string().optional(),
+});
 
 export async function POST(request: Request) {
   try {
     const session = await getServerSession(authOptions);
-    
-    if (!session?.user?.email) {
-      return NextResponse.json(
-        { error: 'You must be logged in to mark a winner' },
-        { status: 401 }
-      );
+    if (!session?.user) {
+      throw Errors.Unauthorized;
     }
 
     const body = await request.json();
-    const { challengeId, winnerId } = body;
-
-    if (!challengeId || !winnerId) {
-      return NextResponse.json(
-        { error: 'Challenge ID and winner ID are required' },
-        { status: 400 }
-      );
+    const result = MarkWinnerSchema.safeParse(body);
+    
+    if (!result.success) {
+      throw Errors.ValidationError(result.error.errors[0].message);
     }
 
-    // Get the challenge
+    const { challengeId, winnerId, notes, screenshotUrl } = result.data;
+
+    // Fetch challenge
     const challenge = await prisma.challenge.findUnique({
       where: { id: challengeId },
       include: {
-        creator: {
-          select: {
-            id: true,
-            email: true,
-            name: true,
-          },
-        },
-        opponent: {
-          select: {
-            id: true,
-            email: true,
-            name: true,
-          },
-        },
+        creator: true,
+        opponent: true,
       },
     });
 
     if (!challenge) {
-      return NextResponse.json(
-        { error: 'Challenge not found' },
-        { status: 404 }
-      );
+      throw Errors.NotFound;
+    }
+
+    // Verify user is part of the challenge
+    if (challenge.creatorId !== session.user.id && challenge.opponentId !== session.user.id) {
+      throw Errors.Forbidden;
     }
 
     // Verify challenge is in progress
-    if (challenge.status !== ChallengeStatus.IN_PROGRESS) {
-      return NextResponse.json(
-        { error: 'Challenge must be in progress to mark a winner' },
-        { status: 400 }
-      );
+    if (challenge.status !== "IN_PROGRESS") {
+      throw Errors.BadRequest("Challenge must be in progress to mark a winner");
     }
 
-    // Verify user is a participant
-    const user = await prisma.user.findUnique({
-      where: { email: session.user.email },
-    });
-
-    if (!user) {
-      return NextResponse.json(
-        { error: 'User not found' },
-        { status: 404 }
-      );
-    }
-
-    if (user.id !== challenge.creatorId && user.id !== challenge.opponentId) {
-      return NextResponse.json(
-        { error: 'Only challenge participants can mark a winner' },
-        { status: 403 }
-      );
-    }
-
-    // Verify winner is a participant
+    // Verify winner is part of the challenge
     if (winnerId !== challenge.creatorId && winnerId !== challenge.opponentId) {
-      return NextResponse.json(
-        { error: 'Winner must be a challenge participant' },
-        { status: 400 }
-      );
+      throw Errors.BadRequest("Winner must be a participant in the challenge");
     }
 
-    // Update challenge and handle payouts in a transaction
-    const transactionResult = await prisma.$transaction(async (tx) => {
-      // Update challenge status and winner
-      const updatedChallenge = await tx.challenge.update({
+    // Update challenge with winner submission
+    const updatedChallenge = await prisma.$transaction(async (tx) => {
+      // Update challenge
+      const updated = await tx.challenge.update({
         where: { id: challengeId },
         data: {
-          status: ChallengeStatus.COMPLETED,
-          winnerId,
-        },
-        include: {
-          creator: {
-            select: {
-              id: true,
-              email: true,
-              name: true,
-            },
-          },
-          opponent: {
-            select: {
-              id: true,
-              email: true,
-              name: true,
-            },
-          },
+          [session.user.id === challenge.creatorId ? "creatorSubmittedWinnerId" : "opponentSubmittedWinnerId"]: winnerId,
+          resultNotes: notes,
+          screenshotUrl,
         },
       });
 
-      // Calculate winnings (stake * 2)
-      const winnings = challenge.stake * 2;
-
-      // Update winner's balance
-      await tx.user.update({
-        where: { id: winnerId },
-        data: {
-          balance: {
-            increment: winnings,
-          },
-        },
-      });
-
-      // Log winner's transaction
-      await tx.transaction.create({
-        data: {
-          userId: winnerId,
-          amount: winnings,
-          type: 'CHALLENGE_WINNINGS',
-          description: `Winnings from ${challenge.type} challenge`,
-          referenceId: challengeId,
-          metadata: {
-            challengeType: challenge.type,
-          },
-        },
-      });
-
-      // If challenge was part of a club, create a timeline event
-      let clubEvent = null;
-      if (challenge.clubId) {
-        clubEvent = await tx.clubEvent.create({
+      // If both parties agree on the winner, complete the challenge
+      if (
+        updated.creatorSubmittedWinnerId &&
+        updated.opponentSubmittedWinnerId &&
+        updated.creatorSubmittedWinnerId === updated.opponentSubmittedWinnerId
+      ) {
+        const winnerUpdate = await tx.challenge.update({
+          where: { id: challengeId },
           data: {
-            type: ClubEventType.CHALLENGE_COMPLETED,
-            clubId: challenge.clubId,
-            userId: winnerId,
-            metadata: {
-              type: challenge.type,
-              stake: challenge.stake,
-              challengeId: challenge.id,
-              winnings,
-            },
-          },
-          include: {
-            user: {
-              select: {
-                id: true,
-                email: true,
-                name: true,
-              },
-            },
+            status: "COMPLETED",
+            winnerId,
           },
         });
+
+        // Transfer winnings
+        const totalPrize = challenge.stake * 2;
+        await tx.user.update({
+          where: { id: winnerId },
+          data: {
+            balance: { increment: totalPrize },
+            wins: { increment: 1 },
+          },
+        });
+
+        // Record transaction
+        await tx.transaction.create({
+          data: {
+            userId: winnerId,
+            amount: totalPrize,
+            type: "CHALLENGE_WINNINGS",
+            description: `Won challenge ${challengeId}`,
+            referenceId: challengeId,
+          },
+        });
+
+        // Create club event if challenge was part of a club
+        if (challenge.clubId) {
+          await tx.clubEvent.create({
+            data: {
+              type: ClubEventType.CHALLENGE_COMPLETED,
+              clubId: challenge.clubId,
+              userId: winnerId,
+              metadata: {
+                challengeType: challenge.type,
+                stake: challenge.stake,
+                challengeId: challenge.id,
+                winnings: totalPrize,
+              },
+            },
+          });
+
+          // Emit club event
+          emitToRoom(`club:${challenge.clubId}`, "club:update", {
+            type: "challenge_completed",
+            challengeId: challenge.id,
+            winnerId,
+            stake: challenge.stake,
+            totalPrize,
+          });
+        }
+
+        return winnerUpdate;
       }
 
-      return { challenge: updatedChallenge, clubEvent };
+      return updated;
     });
 
-    // If challenge was part of a club, emit timeline event
-    if (challenge.clubId && transactionResult.clubEvent) {
-      const res = new NextResponse();
-      const io = await initSocket(res as any);
-      io.to(`club:${challenge.clubId}`).emit('club:update', {
-        type: 'timeline_event',
-        event: {
-          id: transactionResult.clubEvent.id,
-          type: transactionResult.clubEvent.type,
-          userId: transactionResult.clubEvent.userId,
-          userEmail: transactionResult.clubEvent.user.email,
-          userName: transactionResult.clubEvent.user.name,
-          timestamp: transactionResult.clubEvent.timestamp,
-          metadata: transactionResult.clubEvent.metadata,
-        },
-      });
-    }
-
-    return NextResponse.json(transactionResult.challenge);
+    return NextResponse.json(updatedChallenge);
   } catch (error) {
-    console.error('Error marking winner:', error);
-    return NextResponse.json(
-      { error: 'Failed to mark winner' },
-      { status: 500 }
-    );
+    const { error: errorMessage, statusCode } = handleError(error, "MarkWinner");
+    return NextResponse.json({ error: errorMessage }, { status: statusCode });
   }
-} 
+}
