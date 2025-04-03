@@ -29,6 +29,18 @@ A skill-based competitive wagering platform focused on Call of Duty (Warzone and
 
 ## Recent Updates & Enhancements
 
+### Notification System
+- Implemented a global toast notification system using Sonner
+- Unified notification handling across the application
+- Support for different notification types:
+  - Success messages
+  - Error alerts
+  - Warning notifications
+  - Info messages
+  - Loading states for async operations
+- Consistent styling and positioning across all notifications
+- Improved user feedback for all actions
+
 ### Profile System Improvements
 - Enhanced user profiles with:
   - Display name and bio customization
@@ -39,12 +51,21 @@ A skill-based competitive wagering platform focused on Call of Duty (Warzone and
   - Improved profile editing interface
   - Enhanced privacy controls
 
+### Form Handling & Validation
+- Standardized form submission patterns
+- Improved error handling and validation
+- Consistent loading states across all forms
+- Better user feedback during form submission
+- Unified form styling and layout
+
 ### Technical Improvements
 - Implemented NextAuth.js for secure authentication
 - Added Zod validation for form inputs
 - Enhanced error handling and user feedback
 - Improved loading states and UI responsiveness
 - Mobile-friendly navigation updates
+- Consolidated notification system
+- Standardized API response handling
 
 ## Tech Stack
 
@@ -57,7 +78,7 @@ A skill-based competitive wagering platform focused on Call of Duty (Warzone and
 - Tailwind CSS for UI styling
 - Prisma as ORM
 - TypeScript
-- React Hot Toast for notifications
+- Sonner for notifications
 - Zod for validation
 
 ## Project Structure
@@ -127,21 +148,12 @@ npm run dev
 
 ## Recent Development Sprints
 
-### Sprint 6.0 - Profile System Enhancement
-- Implemented gaming stats tracking
-- Added profile editing capabilities
-- Improved error handling and validation
-
-### Sprint 6.1 - Stats Calculation
-- Added K/D ratio calculation
-- Implemented win rate tracking
-- Enhanced stats display UI
-
-### Sprint 6.2 - Profile Hotfix
-- Fixed profile editing form
-- Improved stats validation
-- Added games played tracking
-- Enhanced error notifications
+### Sprint 6.4 - Notification System & UX Improvements
+- Implemented global toast notification system
+- Standardized form handling patterns
+- Enhanced error handling and user feedback
+- Improved loading states across the application
+- Consolidated notification styling and behavior
 
 ### Sprint 6.3 - Dispute System & Wallet Integration
 - Implemented admin dispute resolution dashboard
@@ -150,6 +162,22 @@ npm run dev
 - Added winner payout system with transaction tracking
 - Improved error handling and validation for wallet operations
 - Added transaction history tracking for all wallet events
+
+### Sprint 6.2 - Profile Hotfix
+- Fixed profile editing form
+- Improved stats validation
+- Added games played tracking
+- Enhanced error notifications
+
+### Sprint 6.1 - Stats Calculation
+- Added K/D ratio calculation
+- Implemented win rate tracking
+- Enhanced stats display UI
+
+### Sprint 6.0 - Profile System Enhancement
+- Implemented gaming stats tracking
+- Added profile editing capabilities
+- Improved error handling and validation
 
 ## Key Business Rules
 

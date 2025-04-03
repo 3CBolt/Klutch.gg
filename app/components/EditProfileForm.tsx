@@ -3,7 +3,14 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import toast from 'react-hot-toast';
+import { toast } from 'sonner';
+import { Button } from '@/app/components/ui/button';
+import { Input } from '@/app/components/ui/input';
+import { Label } from '@/app/components/ui/label';
+import { Textarea } from '@/app/components/ui/textarea';
+import { Card, CardContent, CardHeader, CardTitle } from '@/app/components/ui/card';
+import { Loader2 } from 'lucide-react';
+import { showToast } from '@/app/lib/toast';
 
 interface Profile {
   id: string;
@@ -21,26 +28,25 @@ interface EditProfileFormProps {
 
 export default function EditProfileForm({ profile }: EditProfileFormProps) {
   const router = useRouter();
-  const [submitting, setSubmitting] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
-  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    if (submitting) return;
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setIsLoading(true);
 
-    setSubmitting(true);
-    const formData = new FormData(e.currentTarget);
+    const formData = new FormData(event.currentTarget);
     const data = {
       displayName: formData.get('displayName'),
       bio: formData.get('bio'),
-      kills: parseInt(formData.get('kills') as string) || 0,
-      deaths: parseInt(formData.get('deaths') as string) || 0,
-      wins: parseInt(formData.get('wins') as string) || 0,
-      gamesPlayed: parseInt(formData.get('gamesPlayed') as string) || 0,
+      kills: Number(formData.get('kills')),
+      deaths: Number(formData.get('deaths')),
+      wins: Number(formData.get('wins')),
+      gamesPlayed: Number(formData.get('gamesPlayed')),
     };
 
     try {
-      const response = await fetch(`/api/profile/${profile.id}`, {
-        method: 'PATCH',
+      const response = await fetch('/api/profile', {
+        method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
@@ -48,124 +54,104 @@ export default function EditProfileForm({ profile }: EditProfileFormProps) {
       });
 
       if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'Failed to update profile');
+        throw new Error('Failed to update profile');
       }
 
-      toast.success('Profile updated successfully');
-      router.push(`/profile/${profile.id}`);
+      showToast.success('Profile updated successfully');
       router.refresh();
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Failed to update profile');
+      showToast.error('Failed to update profile');
     } finally {
-      setSubmitting(false);
+      setIsLoading(false);
     }
-  }
+  };
 
   return (
-    <form onSubmit={handleSubmit}>
-      {/* Display Name */}
-      <div className="mb-6">
-        <label htmlFor="displayName" className="block text-sm font-medium text-gray-700">
-          Display Name
-        </label>
-        <input
-          type="text"
-          name="displayName"
-          id="displayName"
-          defaultValue={profile.displayName || ''}
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-        />
-      </div>
+    <Card className="p-6">
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div>
+          <Label htmlFor="displayName">Display Name</Label>
+          <Input
+            id="displayName"
+            name="displayName"
+            defaultValue={profile.displayName || ''}
+            required
+          />
+        </div>
 
-      {/* Bio */}
-      <div className="mb-6">
-        <label htmlFor="bio" className="block text-sm font-medium text-gray-700">
-          Bio
-        </label>
-        <textarea
-          id="bio"
-          name="bio"
-          rows={3}
-          defaultValue={profile.bio || ''}
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-        />
-      </div>
+        <div>
+          <Label htmlFor="bio">Bio</Label>
+          <Textarea
+            id="bio"
+            name="bio"
+            rows={3}
+            defaultValue={profile.bio || ''}
+            required
+          />
+        </div>
 
-      {/* Gaming Stats */}
-      <div className="mb-6">
-        <h2 className="text-lg font-medium text-gray-900 mb-4">Gaming Stats</h2>
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <div className="grid grid-cols-2 gap-4">
           <div>
-            <label htmlFor="kills" className="block text-sm font-medium text-gray-700">
-              Kills
-            </label>
-            <input
-              type="number"
-              name="kills"
+            <Label htmlFor="kills">Kills</Label>
+            <Input
               id="kills"
-              min="0"
+              name="kills"
+              type="number"
               defaultValue={profile.kills}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+              required
             />
           </div>
+
           <div>
-            <label htmlFor="deaths" className="block text-sm font-medium text-gray-700">
-              Deaths
-            </label>
-            <input
-              type="number"
-              name="deaths"
+            <Label htmlFor="deaths">Deaths</Label>
+            <Input
               id="deaths"
-              min="0"
+              name="deaths"
+              type="number"
               defaultValue={profile.deaths}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+              required
             />
           </div>
+
           <div>
-            <label htmlFor="wins" className="block text-sm font-medium text-gray-700">
-              Wins
-            </label>
-            <input
-              type="number"
-              name="wins"
+            <Label htmlFor="wins">Wins</Label>
+            <Input
               id="wins"
-              min="0"
+              name="wins"
+              type="number"
               defaultValue={profile.wins}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+              required
             />
           </div>
+
           <div>
-            <label htmlFor="gamesPlayed" className="block text-sm font-medium text-gray-700">
-              Games Played
-            </label>
-            <input
-              type="number"
-              name="gamesPlayed"
+            <Label htmlFor="gamesPlayed">Games Played</Label>
+            <Input
               id="gamesPlayed"
-              min="0"
+              name="gamesPlayed"
+              type="number"
               defaultValue={profile.gamesPlayed}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+              required
             />
           </div>
         </div>
-      </div>
 
-      <div className="flex justify-end gap-3">
-        <Link
-          href={`/profile/${profile.id}`}
-          className="rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50"
-        >
-          Cancel
-        </Link>
-        <button
-          type="submit"
-          disabled={submitting}
-          className="rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 disabled:opacity-50"
-        >
-          {submitting ? 'Saving...' : 'Save'}
-        </button>
-      </div>
-    </form>
+        <div className="flex justify-end gap-3">
+          <Button variant="outline" asChild>
+            <Link href={`/profile/${profile.id}`}>Cancel</Link>
+          </Button>
+          <Button type="submit" disabled={isLoading}>
+            {isLoading ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Updating...
+              </>
+            ) : (
+              'Update Profile'
+            )}
+          </Button>
+        </div>
+      </form>
+    </Card>
   );
 } 

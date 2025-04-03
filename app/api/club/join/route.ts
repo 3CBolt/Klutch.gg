@@ -3,6 +3,8 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/app/api/auth/[...nextauth]/auth';
 import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
+import { getIO } from '@/app/lib/server';
+import { ClubEventType } from '@prisma/client';
 
 const joinClubSchema = z.object({
   clubId: z.string(),
@@ -20,16 +22,16 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-    const result = joinClubSchema.safeParse(body);
+    const validation = joinClubSchema.safeParse(body);
 
-    if (!result.success) {
+    if (!validation.success) {
       return NextResponse.json(
         { error: 'Invalid request body' },
         { status: 400 }
       );
     }
 
-    const { clubId } = result.data;
+    const { clubId } = validation.data;
 
     // Get or create user
     const user = await prisma.user.upsert({
@@ -69,17 +71,72 @@ export async function POST(request: Request) {
       );
     }
 
-    // Add user to club
-    await prisma.club.update({
-      where: { id: clubId },
-      data: {
-        members: {
-          connect: { id: user.id },
+    // Add user to club and create timeline event in a transaction
+    const transactionResult = await prisma.$transaction(async (tx) => {
+      // Add user to club
+      const updatedClub = await tx.club.update({
+        where: { id: clubId },
+        data: {
+          members: {
+            connect: { id: user.id },
+          },
         },
-      },
+        include: {
+          members: {
+            select: {
+              id: true,
+              email: true,
+              name: true,
+            },
+          },
+        },
+      });
+
+      // Create timeline event
+      const event = await tx.clubEvent.create({
+        data: {
+          type: ClubEventType.MEMBER_JOINED,
+          clubId,
+          userId: user.id,
+        },
+        include: {
+          user: {
+            select: {
+              id: true,
+              email: true,
+              name: true,
+            },
+          },
+        },
+      });
+
+      return { club: updatedClub, event };
     });
 
-    return NextResponse.json({ message: 'Successfully joined club' });
+    try {
+      // Try to emit Socket.IO event if available
+      const io = getIO();
+      io.to(`club:${clubId}`).emit('club:update', {
+        type: 'timeline_event',
+        event: {
+          id: transactionResult.event.id,
+          type: transactionResult.event.type,
+          userId: transactionResult.event.userId,
+          userEmail: transactionResult.event.user.email,
+          userName: transactionResult.event.user.name,
+          timestamp: transactionResult.event.timestamp,
+        },
+      });
+    } catch (error) {
+      // Log Socket.IO error but don't fail the request
+      console.warn('Socket.IO emit failed:', error);
+    }
+
+    return NextResponse.json({ 
+      message: 'Successfully joined club',
+      club: transactionResult.club,
+      event: transactionResult.event,
+    });
   } catch (error) {
     console.error('Error joining club:', error);
     return NextResponse.json(

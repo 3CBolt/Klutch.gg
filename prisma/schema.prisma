@@ -67,6 +67,7 @@ model User {
   // Club relations
   ownedClubs    Club[]     @relation("ClubOwner")
   memberOfClubs Club[]     @relation("ClubMembers")
+  clubEvents    ClubEvent[]
 
   // Transaction relations
   transactions  Transaction[]
@@ -105,19 +106,41 @@ enum TransactionType {
   CHALLENGE_REFUND
 }
 
+enum ClubEventType {
+  MEMBER_JOINED
+  MEMBER_LEFT
+  CHALLENGE_CREATED
+  CHALLENGE_COMPLETED
+}
+
+model ClubEvent {
+  id          String        @id @default(cuid())
+  type        ClubEventType
+  clubId      String
+  userId      String
+  timestamp   DateTime      @default(now())
+  metadata    Json?
+
+  // Relations
+  club        Club         @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([clubId])
+  @@index([userId])
+}
+
 model Club {
-  id          String   @id @default(cuid())
-  name        String   @unique
-  description String?  @db.Text
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id          String      @id @default(cuid())
+  name        String      @unique
+  description String?     @db.Text
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
   ownerId     String
 
   // Relations
-  owner       User     @relation("ClubOwner", fields: [ownerId], references: [id])
-  members     User[]   @relation("ClubMembers")
-
-  // Optional: Challenge relation for club-specific challenges
+  owner       User        @relation("ClubOwner", fields: [ownerId], references: [id])
+  members     User[]      @relation("ClubMembers")
+  events      ClubEvent[]
   challenges  Challenge[]
 }
 

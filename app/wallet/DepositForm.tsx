@@ -3,6 +3,13 @@
 import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { loadStripe } from '@stripe/stripe-js';
+import { toast } from 'sonner';
+import { Button } from '@/app/components/ui/button';
+import { Input } from '@/app/components/ui/input';
+import { Label } from '@/app/components/ui/label';
+import { Card } from '@/app/components/ui/card';
+import { Loader2 } from 'lucide-react';
+import { showToast } from '@/app/lib/toast';
 
 if (!process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY) {
   throw new Error('NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY is not set in environment variables');
@@ -15,8 +22,6 @@ export default function DepositForm() {
   const searchParams = useSearchParams();
   const [amount, setAmount] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   useEffect(() => {
     const status = searchParams?.get('status');
@@ -25,30 +30,28 @@ export default function DepositForm() {
     const checkSession = async () => {
       if (status === 'success' && sessionId) {
         try {
-          // Verify the session status with your backend
           const response = await fetch(`/api/wallet/verify-session?session_id=${sessionId}`);
           const data = await response.json();
 
           if (response.ok && data.success) {
-            setSuccessMessage('Payment successful! Your wallet has been updated.');
+            toast.success('Payment successful! Your wallet has been updated.');
           } else {
-            setError('Failed to verify payment. Please contact support if funds were deducted.');
+            toast.error('Failed to verify payment. Please contact support if funds were deducted.');
           }
         } catch (err) {
-          setError('Failed to verify payment status.');
+          toast.error('Failed to verify payment status.');
         }
 
         // Remove the query parameters after handling
         const timer = setTimeout(() => {
           router.replace('/wallet');
-        }, 5000);
+        }, 3000);
         return () => clearTimeout(timer);
       } else if (status === 'canceled') {
-        setError('Payment canceled. Please try again.');
+        toast.error('Payment canceled. Please try again.');
         // Remove the query parameters after a short delay
         const timer = setTimeout(() => {
           router.replace('/wallet');
-          setError(null);
         }, 3000);
         return () => clearTimeout(timer);
       }
@@ -57,16 +60,18 @@ export default function DepositForm() {
     checkSession();
   }, [searchParams, router]);
 
-  const handleDeposit = async () => {
-    const depositAmount = parseFloat(amount);
-    if (isNaN(depositAmount) || depositAmount < 1) {
-      setError('Please enter a valid amount (minimum $1)');
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setIsLoading(true);
+
+    const formData = new FormData(event.currentTarget);
+    const amount = Number(formData.get('amount'));
+
+    if (amount <= 0) {
+      showToast.error('Please enter a valid amount');
+      setIsLoading(false);
       return;
     }
-
-    setIsLoading(true);
-    setError('');
-    setSuccessMessage('');
 
     try {
       const response = await fetch('/api/wallet/deposit', {
@@ -74,70 +79,50 @@ export default function DepositForm() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ amount: depositAmount }),
+        body: JSON.stringify({ amount }),
       });
 
-      const data = await response.json();
-
       if (!response.ok) {
-        throw new Error(data.error || 'Failed to create deposit session');
+        throw new Error('Failed to process deposit');
       }
 
-      // Redirect to the Stripe Checkout URL directly
-      window.location.href = data.url;
+      showToast.success('Deposit successful');
+      router.refresh();
+      (event.target as HTMLFormElement).reset();
     } catch (error) {
-      console.error('Deposit error:', error);
-      setError(error instanceof Error ? error.message : 'Failed to process deposit');
-      setTimeout(() => setError(''), 5000);
+      showToast.error('Failed to process deposit');
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <div className="space-y-4">
-      {successMessage && (
-        <div className="p-4 bg-green-50 text-green-800 rounded-md">
-          {successMessage}
-        </div>
-      )}
-
-      {error && (
-        <div className="p-4 bg-red-50 text-red-800 rounded-md">
-          {error}
-        </div>
-      )}
-
-      <div className="space-y-2">
-        <label htmlFor="amount" className="block text-sm font-medium text-gray-700">
-          Amount (USD)
-        </label>
-        <div className="mt-1 relative rounded-md shadow-sm">
-          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-            <span className="text-gray-500 sm:text-sm">$</span>
-          </div>
-          <input
-            type="number"
-            name="amount"
+    <Card className="p-6">
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div>
+          <Label htmlFor="amount">Amount</Label>
+          <Input
             id="amount"
-            min="1"
-            step="1"
-            value={amount}
-            onChange={(e) => setAmount(e.target.value)}
-            className="focus:ring-indigo-500 focus:border-indigo-500 block w-full pl-7 pr-12 sm:text-sm border-gray-300 rounded-md"
-            placeholder="0.00"
-            disabled={isLoading}
+            name="amount"
+            type="number"
+            step="0.01"
+            min="0"
+            placeholder="Enter amount to deposit"
+            required
           />
         </div>
-      </div>
 
-      <button
-        onClick={handleDeposit}
-        disabled={isLoading || !amount || parseFloat(amount) < 1}
-        className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
-      >
-        {isLoading ? 'Processing...' : 'Deposit'}
-      </button>
-    </div>
+        <Button type="submit" disabled={isLoading}>
+          {isLoading ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              Processing...
+            </>
+          ) : (
+            'Deposit'
+          )}
+        </Button>
+      </form>
+    </Card>
   );
 } 

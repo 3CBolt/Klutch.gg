@@ -2,28 +2,30 @@
 
 import { useSession } from 'next-auth/react';
 
-export interface User {
+interface User {
   id: string;
-  email: string;
-  name?: string;
-  image?: string;
+  name?: string | null;
+  email?: string | null;
+  image?: string | null;
+  balance?: number;
 }
 
-export function useAuth() {
+interface AuthState {
+  isLoading: boolean;
+  isAuthenticated: boolean;
+  user: User | null;
+}
+
+export function useAuth(): AuthState {
   const { data: session, status } = useSession();
 
   return {
-    user: session?.user as User | null,
-    isAuthenticated: status === 'authenticated',
     isLoading: status === 'loading',
-    // Type guard function
-    isUser: (user: any): user is User => {
-      return user && typeof user === 'object' && 'email' in user;
-    }
+    isAuthenticated: status === 'authenticated',
+    user: session?.user as User | null,
   };
 }
 
-// Type guard to check if user is authenticated
-export function isAuthenticated(auth: ReturnType<typeof useAuth>): auth is ReturnType<typeof useAuth> & { user: User } {
+export function isAuthenticated(auth: AuthState): auth is AuthState & { user: User } {
   return auth.isAuthenticated && auth.user !== null;
 } 

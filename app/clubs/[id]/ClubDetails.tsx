@@ -3,11 +3,16 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import toast from 'react-hot-toast';
+import { toast } from 'sonner';
+import { ClubTimeline } from '@/app/components/clubs/ClubTimeline';
+import { Button } from '@/components/ui/button';
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import { ArrowLeft, Calendar, Loader2, Trash2, Users } from 'lucide-react';
 
 interface Member {
   id: string;
   email: string;
+  name?: string | null;
   isOwner: boolean;
 }
 
@@ -22,9 +27,20 @@ interface Club {
   members: Member[];
 }
 
+interface TimelineEvent {
+  id: string;
+  type: 'MEMBER_JOINED' | 'CHALLENGE_CREATED' | 'CHALLENGE_COMPLETED' | 'MEMBER_LEFT';
+  userId: string;
+  userEmail: string;
+  userName?: string;
+  timestamp: Date;
+  metadata?: any;
+}
+
 interface ClubDetailsProps {
   club: Club;
   userEmail: string;
+  timelineEvents: TimelineEvent[];
 }
 
 function LoadingState() {
@@ -54,50 +70,62 @@ function ErrorState({ error }: { error: string }) {
 
 function MemberList({ members }: { members: Member[] }) {
   return (
-    <div className="mt-8">
-      <div className="sm:flex sm:items-center">
-        <div className="sm:flex-auto">
-          <h2 className="text-xl font-semibold text-gray-900">Members</h2>
-          <p className="mt-2 text-sm text-gray-700">
-            A list of all members in this club.
-          </p>
-        </div>
-      </div>
-      <div className="mt-8 flow-root">
-        <div className="-mx-4 -my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
-          <div className="inline-block min-w-full py-2 align-middle sm:px-6 lg:px-8">
-            <table className="min-w-full divide-y divide-gray-300">
-              <thead>
-                <tr>
-                  <th scope="col" className="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-0">
-                    Email
-                  </th>
-                  <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
-                    Role
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-200">
-                {members.map((member) => (
-                  <tr key={member.id}>
-                    <td className="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-0">
-                      {member.email}
-                    </td>
-                    <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                      {member.isOwner ? 'Owner' : 'Member'}
-                    </td>
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center">
+          <Users className="mr-2 h-5 w-5" />
+          Members
+        </CardTitle>
+        <p className="text-sm text-muted-foreground">
+          {members.length} member{members.length !== 1 ? 's' : ''} in this club
+        </p>
+      </CardHeader>
+      <CardContent>
+        <div className="flow-root">
+          <div className="-mx-4 -my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
+            <div className="inline-block min-w-full py-2 align-middle sm:px-6 lg:px-8">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead>
+                  <tr>
+                    <th scope="col" className="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-0">
+                      Member
+                    </th>
+                    <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
+                      Role
+                    </th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody className="divide-y divide-gray-200">
+                  {members.map((member) => (
+                    <tr key={member.id} className="hover:bg-gray-50">
+                      <td className="whitespace-nowrap py-4 pl-4 pr-3 text-sm sm:pl-0">
+                        <div className="font-medium text-gray-900">{member.name || member.email}</div>
+                        {member.name && (
+                          <div className="text-gray-500">{member.email}</div>
+                        )}
+                      </td>
+                      <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
+                        <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
+                          member.isOwner 
+                            ? 'bg-purple-100 text-purple-800'
+                            : 'bg-gray-100 text-gray-800'
+                        }`}>
+                          {member.isOwner ? 'Owner' : 'Member'}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
-      </div>
-    </div>
+      </CardContent>
+    </Card>
   );
 }
 
-export default function ClubDetails({ club, userEmail }: ClubDetailsProps) {
+export default function ClubDetails({ club, userEmail, timelineEvents }: ClubDetailsProps) {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
 
@@ -170,61 +198,80 @@ export default function ClubDetails({ club, userEmail }: ClubDetailsProps) {
       <div className="mx-auto max-w-7xl px-4 sm:px-6 md:px-8">
         <div className="md:flex md:items-center md:justify-between">
           <div className="min-w-0 flex-1">
-            <h2 className="text-2xl font-bold leading-7 text-gray-900 sm:truncate sm:text-3xl sm:tracking-tight">
-              {club.name}
-            </h2>
-            {club.description && (
-              <p className="mt-2 text-sm text-gray-500">
-                {club.description}
-              </p>
-            )}
+            <div className="flex items-center">
+              <Link href="/clubs" className="mr-4">
+                <Button className="h-8 w-8 p-0">
+                  <ArrowLeft className="h-4 w-4" />
+                </Button>
+              </Link>
+              <div>
+                <h2 className="text-2xl font-bold leading-7 text-gray-900 sm:truncate sm:text-3xl sm:tracking-tight">
+                  {club.name}
+                </h2>
+                {club.description && (
+                  <p className="mt-2 text-sm text-gray-500">
+                    {club.description}
+                  </p>
+                )}
+              </div>
+            </div>
           </div>
-          <div className="mt-4 flex md:ml-4 md:mt-0">
-            <Link
-              href="/clubs"
-              className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-            >
-              Back to Clubs
-            </Link>
+          <div className="mt-4 flex md:ml-4 md:mt-0 space-x-3">
             {!isMember && (
-              <button
-                type="button"
+              <Button
                 onClick={handleJoinClub}
                 disabled={isLoading}
-                className="ml-3 inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
+                className="bg-indigo-600 hover:bg-indigo-700"
               >
-                {isLoading ? 'Joining...' : 'Join Club'}
-              </button>
+                {isLoading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Joining...
+                  </>
+                ) : (
+                  <>
+                    <Users className="mr-2 h-4 w-4" />
+                    Join Club
+                  </>
+                )}
+              </Button>
             )}
             {isOwner && (
-              <button
-                type="button"
+              <Button
                 onClick={handleDeleteClub}
                 disabled={isLoading}
-                className="ml-3 inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-50"
+                className="bg-red-600 hover:bg-red-700"
               >
-                {isLoading ? 'Deleting...' : 'Delete Club'}
-              </button>
+                {isLoading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Deleting...
+                  </>
+                ) : (
+                  <>
+                    <Trash2 className="mr-2 h-4 w-4" />
+                    Delete Club
+                  </>
+                )}
+              </Button>
             )}
           </div>
         </div>
 
-        <div className="mt-8 border-t border-gray-200 pt-8">
-          <dl className="grid grid-cols-1 gap-x-4 gap-y-8 sm:grid-cols-2">
-            <div className="sm:col-span-1">
-              <dt className="text-sm font-medium text-gray-500">Owner</dt>
-              <dd className="mt-1 text-sm text-gray-900">{club.owner.email}</dd>
-            </div>
-            <div className="sm:col-span-1">
-              <dt className="text-sm font-medium text-gray-500">Created</dt>
-              <dd className="mt-1 text-sm text-gray-900">
-                {new Date(club.createdAt).toLocaleDateString()}
-              </dd>
-            </div>
-          </dl>
+        <div className="mt-8 grid gap-8 md:grid-cols-2">
+          <MemberList members={club.members} />
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center">
+                <Calendar className="mr-2 h-5 w-5" />
+                Recent Activity
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ClubTimeline clubId={club.id} initialEvents={timelineEvents} />
+            </CardContent>
+          </Card>
         </div>
-
-        <MemberList members={club.members} />
       </div>
     </div>
   );

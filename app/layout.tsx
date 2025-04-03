@@ -4,7 +4,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/app/api/auth/[...nextauth]/auth'
 import AuthProvider from './components/providers/AuthProvider'
 import Navigation from './components/Navigation'
-import { Toaster } from 'react-hot-toast'
+import { Toaster } from './components/ui/toast'
 
 const inter = Inter({ subsets: ['latin'] })
 

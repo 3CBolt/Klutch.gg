@@ -5,6 +5,26 @@ import { PrismaAdapter } from '@auth/prisma-adapter';
 import { compare } from 'bcryptjs';
 import { prisma } from '@/app/lib/prisma';
 
+declare module 'next-auth' {
+  interface Session {
+    user: {
+      id: string;
+      email?: string | null;
+      name?: string | null;
+      image?: string | null;
+      balance?: number;
+      isAdmin?: boolean;
+    }
+  }
+}
+
+declare module 'next-auth/jwt' {
+  interface JWT {
+    id: string;
+    isAdmin?: boolean;
+  }
+}
+
 export const authOptions: NextAuthOptions = {
   adapter: PrismaAdapter(prisma),
   session: {
@@ -35,6 +55,7 @@ export const authOptions: NextAuthOptions = {
             email: true,
             name: true,
             password: true,
+            isAdmin: true,
           }
         });
 
@@ -52,20 +73,23 @@ export const authOptions: NextAuthOptions = {
           id: user.id,
           email: user.email,
           name: user.name,
+          isAdmin: user.isAdmin,
         };
       }
     })
   ],
   callbacks: {
-    async jwt({ token, user, account }) {
+    async jwt({ token, user }) {
       if (user) {
         token.id = user.id;
+        token.isAdmin = (user as any).isAdmin;
       }
       return token;
     },
     async session({ session, token }) {
       if (token && session.user) {
         session.user.id = token.id;
+        session.user.isAdmin = token.isAdmin;
       }
       return session;
     }

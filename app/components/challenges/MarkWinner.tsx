@@ -1,82 +1,41 @@
 'use client';
 
 import { useState } from 'react';
+import { Challenge, ChallengeStatus, User } from '@prisma/client';
 import { useSession } from 'next-auth/react';
-import { Button } from '@/components/ui/button';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { toast } from 'sonner';
-import { ChallengeStatus } from '@prisma/client';
+import { Button } from '@/app/components/ui/button';
+import { useRouter } from 'next/navigation';
+import toast from 'react-hot-toast';
 
 interface MarkWinnerProps {
-  challenge: {
-    id: string;
-    status: ChallengeStatus;
-    creatorId: string;
-    opponentId: string | null;
-    creator: {
-      id: string;
-      name: string | null;
-      displayName: string | null;
-    };
-    opponent: {
-      id: string;
-      name: string | null;
-      displayName: string | null;
-    } | null;
-    creatorSubmittedWinnerId?: string | null;
-    opponentSubmittedWinnerId?: string | null;
+  challenge: Challenge & {
+    creator: User;
+    opponent: User | null;
   };
-  onStatusChange?: () => void;
+  onStatusChange: (newStatus: ChallengeStatus, winner?: User, disputeReason?: string) => void;
 }
 
 export function MarkWinner({ challenge, onStatusChange }: MarkWinnerProps) {
   const { data: session } = useSession();
-  const [selectedWinner, setSelectedWinner] = useState<string>('');
+  const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
+  const [showDisputeDialog, setShowDisputeDialog] = useState(false);
+  const [disputeReason, setDisputeReason] = useState('');
 
-  if (!session?.user?.email || !challenge.opponent) return null;
+  const isCreator = session?.user?.id === challenge.creatorId;
+  const isOpponent = session?.user?.id === challenge.opponentId;
 
-  const isParticipant = 
-    challenge.creatorId === session.user.id || 
-    challenge.opponentId === session.user.id;
-
-  const hasAlreadySubmitted = 
-    (challenge.creatorId === session.user.id && challenge.creatorSubmittedWinnerId) ||
-    (challenge.opponentId === session.user.id && challenge.opponentSubmittedWinnerId);
-
-  if (!isParticipant || hasAlreadySubmitted || 
-      challenge.status !== ChallengeStatus.IN_PROGRESS) {
-    return null;
-  }
-
-  const getWinnerName = (winnerId: string) => {
-    if (winnerId === challenge.creatorId) {
-      return challenge.creator.displayName || challenge.creator.name;
-    }
-    return challenge.opponent?.displayName || challenge.opponent?.name;
-  };
-
-  const handleSubmit = async () => {
-    if (!selectedWinner) {
-      toast.error('Please select a winner');
-      return;
-    }
-
-    setIsSubmitting(true);
+  const handleMarkWinner = async (winnerId: string) => {
     try {
-      const response = await fetch('/api/challenges/mark-winner', {
+      setIsSubmitting(true);
+      const response = await fetch(`/api/challenges/mark-winner`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+        },
         body: JSON.stringify({
           challengeId: challenge.id,
-          winnerId: selectedWinner,
+          winnerId,
         }),
       });
 
@@ -86,60 +45,134 @@ export function MarkWinner({ challenge, onStatusChange }: MarkWinnerProps) {
         throw new Error(data.error || 'Failed to mark winner');
       }
 
-      if (data.status === 'COMPLETED') {
-        toast.success('Challenge completed! Winner has been marked.');
-      } else if (data.status === 'DISPUTED') {
-        toast.error('Players disagree on the winner. A dispute has been created.');
-      } else {
-        toast.success('Your selection has been recorded. Waiting for other player.');
-      }
-
-      if (onStatusChange) {
-        onStatusChange();
-      }
+      const winner = winnerId === challenge.creatorId ? challenge.creator : challenge.opponent || undefined;
+      onStatusChange(ChallengeStatus.COMPLETED, winner);
+      toast.success('Winner marked successfully');
+      router.refresh();
     } catch (error) {
+      console.error('Error marking winner:', error);
       toast.error(error instanceof Error ? error.message : 'Failed to mark winner');
     } finally {
       setIsSubmitting(false);
-      setShowConfirmDialog(false);
+    }
+  };
+
+  const handleDispute = async () => {
+    if (!disputeReason.trim()) {
+      toast.error('Please provide a reason for the dispute');
+      return;
+    }
+
+    try {
+      setIsSubmitting(true);
+      const response = await fetch(`/api/challenges/dispute`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          challengeId: challenge.id,
+          reason: disputeReason,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to submit dispute');
+      }
+
+      onStatusChange(ChallengeStatus.DISPUTED, undefined, disputeReason);
+      setShowDisputeDialog(false);
+      toast.success('Dispute submitted successfully');
+      router.refresh();
+    } catch (error) {
+      console.error('Error submitting dispute:', error);
+      toast.error(error instanceof Error ? error.message : 'Failed to submit dispute');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   return (
-    <div className="flex flex-col gap-4 mt-4">
-      <h3 className="text-lg font-semibold">Mark Winner</h3>
-      <div className="flex gap-4">
-        <Select
-          value={selectedWinner}
-          onValueChange={setSelectedWinner}
-        >
-          <SelectTrigger className="w-[200px]">
-            <SelectValue placeholder="Select winner" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value={challenge.creatorId}>
-              {challenge.creator.displayName || challenge.creator.name}
-            </SelectItem>
-            <SelectItem value={challenge.opponent.id}>
-              {challenge.opponent.displayName || challenge.opponent.name}
-            </SelectItem>
-          </SelectContent>
-        </Select>
+    <div className="space-y-6 bg-white p-6 rounded-lg shadow-sm">
+      <div className="flex flex-col space-y-2">
+        <h3 className="text-lg font-semibold text-gray-900">Mark Winner</h3>
+        <p className="text-sm text-gray-500">
+          Select who won the challenge. This action cannot be undone.
+        </p>
+      </div>
+
+      <div className="flex flex-col sm:flex-row gap-4">
         <Button
-          onClick={() => {
-            if (!selectedWinner) {
-              toast.error('Please select a winner');
-              return;
-            }
-            if (confirm(`Are you sure you want to mark ${getWinnerName(selectedWinner)} as the winner? This action cannot be undone. If the other player disagrees, a dispute will be created.`)) {
-              handleSubmit();
-            }
-          }}
-          disabled={isSubmitting || !selectedWinner}
+          onClick={() => handleMarkWinner(challenge.creatorId)}
+          disabled={isSubmitting}
+          className="flex-1 min-h-[44px]"
         >
-          {isSubmitting ? 'Submitting...' : 'Submit Winner'}
+          {isSubmitting ? (
+            <span className="h-4 w-4 animate-spin mr-2">⌛</span>
+          ) : null}
+          {challenge.creator.displayName || challenge.creator.name || 'Creator'}
+        </Button>
+        <Button
+          onClick={() => handleMarkWinner(challenge.opponentId!)}
+          disabled={isSubmitting}
+          className="flex-1 min-h-[44px]"
+        >
+          {isSubmitting ? (
+            <span className="h-4 w-4 animate-spin mr-2">⌛</span>
+          ) : null}
+          {challenge.opponent?.displayName || challenge.opponent?.name || 'Opponent'}
         </Button>
       </div>
+
+      <div className="pt-2">
+        <Button
+          className="w-full min-h-[44px] bg-red-500 hover:bg-red-600 text-white"
+          onClick={() => setShowDisputeDialog(true)}
+          disabled={isSubmitting}
+        >
+          {isSubmitting ? (
+            <span className="h-4 w-4 animate-spin mr-2">⌛</span>
+          ) : null}
+          Submit Dispute
+        </Button>
+      </div>
+
+      {showDisputeDialog && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full space-y-4">
+            <h3 className="text-lg font-semibold text-gray-900">Submit Dispute</h3>
+            <textarea
+              value={disputeReason}
+              onChange={(e) => setDisputeReason(e.target.value)}
+              placeholder="Please explain why you are disputing this challenge..."
+              className="w-full p-3 border rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+              rows={4}
+              disabled={isSubmitting}
+            />
+            <div className="flex justify-end gap-3 pt-2">
+              <Button
+                className="min-h-[44px] bg-gray-100 hover:bg-gray-200 text-gray-900"
+                onClick={() => setShowDisputeDialog(false)}
+                disabled={isSubmitting}
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleDispute}
+                disabled={isSubmitting || !disputeReason.trim()}
+                className="min-h-[44px] bg-indigo-600 hover:bg-indigo-700 text-white"
+              >
+                {isSubmitting ? (
+                  <span className="h-4 w-4 animate-spin mr-2">⌛</span>
+                ) : null}
+                Submit Dispute
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 } 

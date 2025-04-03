@@ -20,9 +20,9 @@ function formatStatus(status: ChallengeStatus): string {
 function LoadingState() {
   return (
     <div className="text-center py-12">
-      <div className="animate-pulse">
-        <div className="h-8 bg-gray-200 rounded w-1/4 mx-auto mb-4"></div>
-        <div className="h-4 bg-gray-200 rounded w-1/2 mx-auto"></div>
+      <div className="rounded-lg border-2 border-gray-100 p-12">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-500 mx-auto"></div>
+        <p className="mt-4 text-sm text-gray-500">Loading challenges...</p>
       </div>
     </div>
   );
@@ -31,35 +31,33 @@ function LoadingState() {
 function EmptyState() {
   return (
     <div className="text-center py-12">
-      <svg
-        className="mx-auto h-12 w-12 text-gray-400"
-        fill="none"
-        viewBox="0 0 24 24"
-        stroke="currentColor"
-        aria-hidden="true"
-      >
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeWidth={2}
-          d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
-        />
-      </svg>
-      <h3 className="mt-2 text-sm font-semibold text-gray-900">No active challenges</h3>
-      <p className="mt-1 text-sm text-gray-500">Create a new challenge or check Challenge History for completed ones.</p>
-      <div className="mt-6 space-x-4">
-        <Link
-          href="/challenges/create"
-          className="inline-flex items-center rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
+      <div className="rounded-lg border-2 border-dashed border-gray-300 p-12">
+        <svg
+          className="mx-auto h-12 w-12 text-gray-400"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          aria-hidden="true"
         >
-          Create Challenge
-        </Link>
-        <Link
-          href="/challenges/history"
-          className="inline-flex items-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50"
-        >
-          View History
-        </Link>
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
+          />
+        </svg>
+        <h3 className="mt-4 text-lg font-medium text-gray-900">No active challenges</h3>
+        <p className="mt-2 text-sm text-gray-500">
+          Get started by creating a new challenge or join an existing one.
+        </p>
+        <div className="mt-6">
+          <Link
+            href="/challenges/create"
+            className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+          >
+            Create Challenge
+          </Link>
+        </div>
       </div>
     </div>
   );
@@ -105,73 +103,80 @@ function ChallengeList({ challenges }: { challenges: Awaited<ReturnType<typeof g
   }
 
   return (
-    <table className="min-w-full divide-y divide-gray-300">
-      <thead className="bg-gray-50">
-        <tr>
-          <th scope="col" className="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-6">
-            Creator
-          </th>
-          <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
-            Opponent
-          </th>
-          <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
-            Type
-          </th>
-          <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
-            Stake
-          </th>
-          <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
-            Status
-          </th>
-          <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
-            Winner
-          </th>
-          <th scope="col" className="relative py-3.5 pl-3 pr-4 sm:pr-6">
-            <span className="sr-only">Actions</span>
-          </th>
-        </tr>
-      </thead>
-      <tbody className="divide-y divide-gray-200 bg-white">
-        {challenges.map((challenge) => (
-          <tr key={challenge.id}>
-            <td className="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6">
-              {challenge.creator?.name || challenge.creator?.email || 'Unknown'}
-            </td>
-            <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-              {challenge.opponent ? (challenge.opponent.name || challenge.opponent.email) : '-'}
-            </td>
-            <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-              {challenge.type}
-            </td>
-            <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-              {formatCurrency(challenge.stake)}
-            </td>
-            <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-              <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                challenge.status === ChallengeStatus.OPEN ? 'bg-green-100 text-green-800' :
-                challenge.status === ChallengeStatus.IN_PROGRESS ? 'bg-blue-100 text-blue-800' :
-                challenge.status === ChallengeStatus.COMPLETED ? 'bg-purple-100 text-purple-800' :
-                challenge.status === ChallengeStatus.DISPUTED ? 'bg-red-100 text-red-800' :
-                'bg-gray-100 text-gray-800'
-              }`}>
-                {formatStatus(challenge.status)}
-              </span>
-            </td>
-            <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-              {challenge.winner ? (challenge.winner.name || challenge.winner.email || 'Unknown') : '-'}
-            </td>
-            <td className="relative whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-6">
-              <Link
-                href={`/challenges/${challenge.id}`}
-                className="text-indigo-600 hover:text-indigo-900"
-              >
-                View
-              </Link>
-            </td>
+    <div className="overflow-hidden shadow ring-1 ring-black ring-opacity-5 sm:rounded-lg">
+      <table className="min-w-full divide-y divide-gray-300">
+        <thead className="bg-gray-50">
+          <tr>
+            <th scope="col" className="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-6">
+              Creator
+            </th>
+            <th scope="col" className="hidden sm:table-cell px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
+              Opponent
+            </th>
+            <th scope="col" className="hidden sm:table-cell px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
+              Type
+            </th>
+            <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
+              Stake
+            </th>
+            <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
+              Status
+            </th>
+            <th scope="col" className="hidden sm:table-cell px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
+              Winner
+            </th>
+            <th scope="col" className="relative py-3.5 pl-3 pr-4 sm:pr-6">
+              <span className="sr-only">View</span>
+            </th>
           </tr>
-        ))}
-      </tbody>
-    </table>
+        </thead>
+        <tbody className="divide-y divide-gray-200 bg-white">
+          {challenges.map((challenge) => (
+            <tr key={challenge.id} className="hover:bg-gray-50">
+              <td className="whitespace-nowrap py-4 pl-4 pr-3 text-sm sm:pl-6">
+                <div className="font-medium text-gray-900">
+                  {challenge.creator?.name || challenge.creator?.email || 'Unknown'}
+                </div>
+                <div className="sm:hidden text-gray-500">
+                  {challenge.opponent ? (challenge.opponent.name || challenge.opponent.email) : '-'}
+                </div>
+              </td>
+              <td className="hidden sm:table-cell whitespace-nowrap px-3 py-4 text-sm text-gray-500">
+                {challenge.opponent ? (challenge.opponent.name || challenge.opponent.email) : '-'}
+              </td>
+              <td className="hidden sm:table-cell whitespace-nowrap px-3 py-4 text-sm text-gray-500">
+                {challenge.type}
+              </td>
+              <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-900 font-medium">
+                {formatCurrency(challenge.stake)}
+              </td>
+              <td className="whitespace-nowrap px-3 py-4 text-sm">
+                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                  challenge.status === ChallengeStatus.OPEN ? 'bg-green-100 text-green-800' :
+                  challenge.status === ChallengeStatus.IN_PROGRESS ? 'bg-blue-100 text-blue-800' :
+                  challenge.status === ChallengeStatus.COMPLETED ? 'bg-purple-100 text-purple-800' :
+                  challenge.status === ChallengeStatus.DISPUTED ? 'bg-red-100 text-red-800' :
+                  'bg-gray-100 text-gray-800'
+                }`}>
+                  {formatStatus(challenge.status)}
+                </span>
+              </td>
+              <td className="hidden sm:table-cell whitespace-nowrap px-3 py-4 text-sm text-gray-500">
+                {challenge.winner ? (challenge.winner.name || challenge.winner.email || 'Unknown') : '-'}
+              </td>
+              <td className="relative whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-6">
+                <Link
+                  href={`/challenges/${challenge.id}`}
+                  className="text-indigo-600 hover:text-indigo-900"
+                >
+                  View<span className="sr-only">, {challenge.id}</span>
+                </Link>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
   );
 }
 

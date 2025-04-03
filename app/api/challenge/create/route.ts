@@ -1,15 +1,16 @@
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/app/api/auth/[...nextauth]/auth';
-import { prisma } from '@/app/lib/prisma';
-import { ChallengeType, ChallengeStatus } from '@prisma/client';
+import { prisma } from '@/lib/prisma';
+import { ChallengeType, ChallengeStatus, ClubEventType } from '@prisma/client';
+import { initSocket } from '@/app/lib/socket';
 
-// Input validation type
-type CreateChallengeInput = {
+interface CreateChallengeInput {
   stake: number;
   type: ChallengeType;
   opponentUsername?: string;
-};
+  clubId?: string;
+}
 
 export async function POST(request: Request) {
   try {
@@ -32,7 +33,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const { stake, type, opponentUsername } = body as CreateChallengeInput;
+    const { stake, type, opponentUsername, clubId } = body as CreateChallengeInput;
 
     // Validate stake is a positive number
     if (typeof stake !== 'number' || isNaN(stake) || stake <= 0) {
@@ -93,45 +94,76 @@ export async function POST(request: Request) {
 
       if (!opponent) {
         return NextResponse.json(
-          { error: 'Specified opponent does not exist' },
-          { status: 400 }
+          { error: 'Opponent not found' },
+          { status: 404 }
         );
       }
 
-      // Check opponent's balance
       if (opponent.balance < stake) {
         return NextResponse.json(
-          { error: 'Opponent has insufficient balance for this challenge' },
+          { error: 'Opponent has insufficient balance' },
           { status: 400 }
         );
       }
     }
 
+    // If clubId is provided, verify it exists and creator is a member
+    if (clubId) {
+      const club = await prisma.club.findUnique({
+        where: { id: clubId },
+        include: {
+          members: {
+            select: { id: true },
+          },
+        },
+      });
+
+      if (!club) {
+        return NextResponse.json(
+          { error: 'Club not found' },
+          { status: 404 }
+        );
+      }
+
+      const isMember = club.members.some(member => member.id === creator.id);
+      if (!isMember) {
+        return NextResponse.json(
+          { error: 'You must be a member of the club to create a challenge' },
+          { status: 403 }
+        );
+      }
+    }
+
     // Create challenge and handle balance in a transaction
-    const challenge = await prisma.$transaction(async (tx) => {
-      // Create the challenge first to get the ID
+    const transactionResult = await prisma.$transaction(async (tx) => {
+      // Create challenge
       const challenge = await tx.challenge.create({
         data: {
-          creatorId: creator.id,
-          opponentId: opponent?.id || null,
-          stake,
           type,
+          stake,
           status: opponent ? ChallengeStatus.IN_PROGRESS : ChallengeStatus.OPEN,
-          lockedFunds: opponent ? stake * 2 : stake, // Lock stakes from both players if opponent exists
+          creatorId: creator.id,
+          opponentId: opponent?.id,
+          clubId,
+          lockedFunds: opponent ? stake * 2 : stake, // Lock stakes from both players if opponent is specified
         },
         include: {
           creator: {
             select: {
+              id: true,
               name: true,
               email: true,
               displayName: true,
+              image: true,
             }
           },
           opponent: {
             select: {
+              id: true,
               name: true,
               email: true,
               displayName: true,
+              image: true,
             }
           }
         }
@@ -142,9 +174,9 @@ export async function POST(request: Request) {
         where: { id: creator.id },
         data: {
           balance: {
-            decrement: stake,
-          },
-        },
+            decrement: stake
+          }
+        }
       });
 
       // Log creator's stake deduction transaction
@@ -162,15 +194,15 @@ export async function POST(request: Request) {
         }
       });
 
-      // If there's a direct opponent, deduct their stake too
+      // If opponent is specified, deduct their stake too
       if (opponent) {
         await tx.user.update({
           where: { id: opponent.id },
           data: {
             balance: {
-              decrement: stake,
-            },
-          },
+              decrement: stake
+            }
+          }
         });
 
         // Log opponent's stake deduction transaction
@@ -189,34 +221,58 @@ export async function POST(request: Request) {
         });
       }
 
-      return challenge;
+      // If challenge is created within a club, create a timeline event
+      let clubEvent = null;
+      if (clubId) {
+        clubEvent = await tx.clubEvent.create({
+          data: {
+            type: ClubEventType.CHALLENGE_CREATED,
+            clubId,
+            userId: creator.id,
+            metadata: {
+              type,
+              stake,
+              challengeId: challenge.id,
+            },
+          },
+          include: {
+            user: {
+              select: {
+                id: true,
+                email: true,
+                name: true,
+              },
+            },
+          },
+        });
+      }
+
+      return { challenge, clubEvent };
     });
 
-    return NextResponse.json({ 
-      success: true,
-      challenge,
-      redirect: '/challenges'
-    });
-  } catch (error: any) {
+    // If challenge was created within a club, emit timeline event
+    if (clubId && transactionResult.clubEvent) {
+      const res = new NextResponse();
+      const io = await initSocket(res as any);
+      io.to(`club:${clubId}`).emit('club:update', {
+        type: 'timeline_event',
+        event: {
+          id: transactionResult.clubEvent.id,
+          type: transactionResult.clubEvent.type,
+          userId: transactionResult.clubEvent.userId,
+          userEmail: transactionResult.clubEvent.user.email,
+          userName: transactionResult.clubEvent.user.name,
+          timestamp: transactionResult.clubEvent.timestamp,
+          metadata: transactionResult.clubEvent.metadata,
+        },
+      });
+    }
+
+    return NextResponse.json(transactionResult.challenge);
+  } catch (error) {
     console.error('Error creating challenge:', error);
-    
-    // Handle specific Prisma errors
-    if (error.code === 'P2002') {
-      return NextResponse.json(
-        { error: 'A similar challenge already exists' },
-        { status: 400 }
-      );
-    }
-    
-    if (error.code === 'P2025') {
-      return NextResponse.json(
-        { error: 'User not found' },
-        { status: 404 }
-      );
-    }
-
     return NextResponse.json(
-      { error: 'Failed to create challenge. Please try again later.' },
+      { error: 'Failed to create challenge' },
       { status: 500 }
     );
   }

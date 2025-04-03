@@ -25,22 +25,39 @@ export default async function ClubPage({ params }: { params: { id: string } }) {
   }
 
   try {
-    const club = await prisma.club.findUnique({
-      where: { id: params.id },
-      include: {
-        owner: {
-          select: {
-            email: true,
+    const [club, events] = await Promise.all([
+      prisma.club.findUnique({
+        where: { id: params.id },
+        include: {
+          owner: {
+            select: {
+              email: true,
+            },
+          },
+          members: {
+            select: {
+              id: true,
+              email: true,
+              name: true,
+            },
           },
         },
-        members: {
-          select: {
-            id: true,
-            email: true,
+      }),
+      prisma.clubEvent.findMany({
+        where: { clubId: params.id },
+        orderBy: { timestamp: 'desc' },
+        take: 50,
+        include: {
+          user: {
+            select: {
+              id: true,
+              email: true,
+              name: true,
+            },
           },
         },
-      },
-    });
+      }),
+    ]);
 
     if (!club) {
       notFound();
@@ -52,12 +69,23 @@ export default async function ClubPage({ params }: { params: { id: string } }) {
       isOwner: member.email === club.owner.email,
     }));
 
+    // Transform events into the format expected by ClubTimeline
+    const timelineEvents = events.map(event => ({
+      id: event.id,
+      type: event.type,
+      userId: event.userId,
+      userEmail: event.user.email,
+      userName: event.user.name,
+      timestamp: event.timestamp,
+      metadata: event.metadata,
+    }));
+
     const clubData = {
       ...club,
       members: membersWithRole,
     };
 
-    return <ClubDetails club={clubData} userEmail={session.user.email} />;
+    return <ClubDetails club={clubData} userEmail={session.user.email} timelineEvents={timelineEvents} />;
   } catch (error) {
     console.error('Error loading club:', error);
     return (

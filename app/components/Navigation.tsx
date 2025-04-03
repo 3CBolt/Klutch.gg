@@ -53,7 +53,10 @@ export default function Navigation() {
     { href: '/wallet', label: 'Wallet' },
     ...(session?.user ? [
       { href: `/profile/${session.user.id}`, label: 'Profile' },
-      ...(isAdmin ? [{ href: '/admin/disputes', label: 'Admin Disputes' }] : []),
+      ...(isAdmin ? [
+        { href: '/admin/disputes', label: 'Admin Disputes' },
+        { href: '/admin/balance', label: 'Balance Management' },
+      ] : []),
     ] : [
       { href: '/login', label: 'Login' },
       { href: '/register', label: 'Register' },

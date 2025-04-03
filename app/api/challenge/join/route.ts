@@ -62,30 +62,91 @@ export async function POST(request: Request) {
       );
     }
 
-    // Update the challenge
-    const updatedChallenge = await prisma.challenge.update({
-      where: { id: challengeId },
-      data: {
-        opponentId: session.user.id,
-        status: ChallengeStatus.IN_PROGRESS
-      },
-      include: {
-        creator: {
-          select: {
-            name: true,
-            email: true
-          }
-        },
-        opponent: {
-          select: {
-            name: true,
-            email: true
-          }
-        }
-      }
+    // Get the joining user's current balance
+    const user = await prisma.user.findUnique({
+      where: { id: session.user.id }
     });
 
-    return NextResponse.json(updatedChallenge, { status: 200 });
+    if (!user) {
+      return NextResponse.json(
+        { error: 'User not found' },
+        { status: 404 }
+      );
+    }
+
+    // Check if user has sufficient balance
+    if (user.balance < challenge.stake) {
+      return NextResponse.json(
+        { error: 'Insufficient balance to join challenge' },
+        { status: 400 }
+      );
+    }
+
+    // Update the challenge and handle balance in a transaction
+    const updatedChallenge = await prisma.$transaction(async (tx) => {
+      // Update challenge status
+      const updatedChallenge = await tx.challenge.update({
+        where: { id: challengeId },
+        data: {
+          opponentId: session.user.id,
+          status: ChallengeStatus.IN_PROGRESS,
+          lockedFunds: challenge.stake * 2 // Lock stakes from both players
+        },
+        include: {
+          creator: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+              displayName: true,
+              image: true,
+            }
+          },
+          opponent: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+              displayName: true,
+              image: true,
+            }
+          }
+        }
+      });
+
+      // Deduct stake from opponent's balance
+      await tx.user.update({
+        where: { id: session.user.id },
+        data: {
+          balance: {
+            decrement: challenge.stake
+          }
+        }
+      });
+
+      // Log opponent's stake deduction transaction
+      await tx.transaction.create({
+        data: {
+          userId: session.user.id,
+          amount: -challenge.stake,
+          type: 'CHALLENGE_ENTRY',
+          description: `Stake for ${challenge.type} challenge`,
+          referenceId: challengeId,
+          metadata: {
+            challengeType: challenge.type,
+            role: 'opponent'
+          }
+        }
+      });
+
+      return updatedChallenge;
+    });
+
+    // Return the opponent data in the format expected by the Socket.IO client
+    return NextResponse.json({
+      challenge: updatedChallenge,
+      opponent: updatedChallenge.opponent
+    }, { status: 200 });
   } catch (error) {
     console.error('Failed to join challenge:', error);
     return NextResponse.json(
